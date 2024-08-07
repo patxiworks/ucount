@@ -33,7 +33,7 @@ class E2ActivityType(models.Model):
     activitytypeid = models.AutoField(db_column='ActivityTypeID', primary_key=True)  # Field name made lowercase.
     activitytype = models.CharField(db_column='ActivityType', max_length=15, verbose_name='Type of activity')  # Field name made lowercase.
     activitytypename = models.CharField(db_column='ActivityTypeName', max_length=100, verbose_name='Name of activity')  # Field name made lowercase.
-    activityformat = models.CharField(db_column='ActivityFormat', max_length=10, choices={"open": "Open","closed": "Closed"}, default='open')
+    activityformat = models.CharField(db_column='ActivityFormat', max_length=10, verbose_name='Activity format', choices={"open": "Open","closed": "Closed"}, default='open')
     #serialnoonreport = models.IntegerField(db_column='SerialNoOnReport')  # Field name made lowercase.
 
     class Meta:

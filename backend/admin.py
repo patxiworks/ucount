@@ -132,9 +132,9 @@ class E1PeopleAdmin(admin.ModelAdmin):
     def fullname(self, obj):
         qs = R3CategoryAssign.objects.filter(person=obj.personid)
         name = obj.__str__()
-        ss = [item.category.category for item in qs][-1]
-        return name + " ("+ ss +")"
-        #return ss
+        #ss = [item.category.category for item in qs][-1]
+        #return name + " ("+ ss +")"
+        return name
 
     def group(self, obj):
         qs = R4GroupAssign.objects.filter(person=obj.personid)
