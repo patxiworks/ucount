@@ -17,8 +17,25 @@ class MembersInline(admin.TabularInline):
 
 class E2ActivitiesAdmin(admin.ModelAdmin):
     model = E2Activities
-    list_display = ('description', 'person')
+    list_display = ('activity', 'person')
     list_filter = ['activitytype__activitytype']
+
+    def get_exclude(self, request, obj=None):
+        if obj:
+            return []
+        else:
+            return ['person']
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return ['centre']
+        else:
+            return []
+
+    '''def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "person":
+            kwargs["queryset"] = E2Activities.objects.filter(activitytype__activityformat="closed")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)'''
 
     ### dynamically add inline
     '''def get_inline_instances(self, request, obj=None):
@@ -117,6 +134,23 @@ class GroupAssignInline(admin.TabularInline):
     max_num = 1
     extra = 0
 
+    def has_add_permission(self, request, obj=None):
+        if obj and obj.centre:
+            return True
+        else:
+            return False
+
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        field = super(GroupAssignInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
+        if db_field.name == "group":
+            if request._obj_ is not None:
+                kwargs["queryset"] = E4Groups.objects.filter(centre__centre=request._obj_.centre)
+            else:
+                pass
+        return super(GroupAssignInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    
+
 class AttendedByAssignInline(admin.TabularInline):
     model = R5AttendedByAssign
     fk_name = "attendedby"
@@ -138,14 +172,31 @@ class E1PeopleAdmin(admin.ModelAdmin):
 
     def group(self, obj):
         qs = R4GroupAssign.objects.filter(person=obj.personid)
-        gr = [item.category.category for item in qs]
+        gr = [item.group for item in qs]
         try:
             return gr[-1]
         except IndexError:
             return '-'
 
+    def get_form(self, request, obj=None, **kwargs):
+        request._obj_ = obj
+        return super(E1PeopleAdmin, self).get_form(request, obj, **kwargs)
+
     fullname.admin_order_field = 'surname'
-        
+
+
+@admin.register(E6Cities)
+class E5CitiesAdmin(admin.ModelAdmin):
+    #model = E6Cities
+    def has_module_permission(self, request):
+        return False
+
+
+@admin.register(E5Centres)
+class E5CentresAdmin(admin.ModelAdmin):
+    model = E5Centres
+    def has_module_permission(self, request):
+        return False
 
 
 @admin.register(E2ActivityType)
@@ -162,7 +213,14 @@ class ParticipantsInline(admin.TabularInline):
 @admin.register(R1ActivitiesLog)
 class R1ActivitiesLogAdmin(admin.ModelAdmin):
     # Open Events
-    #inlines = [ ParticipantsInline, ]
+    inlines = [ ParticipantsInline, ]
+
+    def openActivities(self, obj):
+        if obj.activity.activitytype.activityformat == "open":
+            return obj.__str__()
+
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).filter(activity__activitytype__activityformat = "open")
 
     # Set activity field to 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -175,6 +233,9 @@ class R1ActivitiesLogAdmin(admin.ModelAdmin):
 class MemberActivitiesAdmin(admin.ModelAdmin):
     # Closed Events
     inlines = [ ParticipantsInline, ]
+
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).filter(activity__activitytype__activityformat = "closed")
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "activity":
@@ -190,6 +251,7 @@ class E3CategoriesAdmin(admin.ModelAdmin):
 
 @admin.register(E4Groups)
 class E4GroupsAdmin(admin.ModelAdmin):
+  #model = E4Groups
   def has_module_permission(self, request):
     return False
     
