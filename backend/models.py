@@ -33,7 +33,7 @@ class E5Centres(models.Model):
     centreid = models.AutoField(db_column='CentreID', primary_key=True)  # Field name made lowercase.
     centre = models.CharField(db_column='Centre', default='', max_length=50, verbose_name='Name of centre')  # Field name made lowercase.
     acronym = models.CharField(db_column='CentreAcronym', default='', max_length=50, verbose_name='Acronym')
-    city = models.ForeignKey(E6Cities, models.DO_NOTHING, db_column='City', default='', verbose_name='City')
+    city = models.ForeignKey(E6Cities, models.CASCADE, db_column='City', default='', verbose_name='City')
 
     class Meta:
         #managed = False
@@ -53,7 +53,7 @@ class E1People(models.Model):
     dofb = models.DateField(db_column='DofB', blank=True, null=True, verbose_name='Date of birth')  # Field name made lowercase.
     phone = models.CharField(db_column='Phone', max_length=20, blank=True, null=True, verbose_name='Phone number')  # Field name made lowercase.
     email = models.EmailField(db_column='Email', max_length=150, blank=True, null=True, verbose_name='Email address', validators=[validate_email])  # Field name made lowercase.
-    centre = models.ForeignKey(E5Centres, models.DO_NOTHING, db_column='Centre', verbose_name='Centre', default='', blank=True, null=True)
+    centre = models.ForeignKey(E5Centres, models.CASCADE, db_column='Centre', verbose_name='Centre', default='', blank=True, null=True)
     status = models.IntegerField(db_column='Status', default=1, editable=False)  # Field name made lowercase.
 
     class Meta:
@@ -86,8 +86,8 @@ class E2ActivityType(models.Model):
 
 class E2Activities(models.Model):
     activityid = models.AutoField(db_column='ActivityID', primary_key=True)  # Field name made lowercase.
-    activitytype = models.ForeignKey(E2ActivityType, models.DO_NOTHING, db_column='ActivityTypeID', default=0, verbose_name='Type of activity')  # Field name made lowercase.
-    centre = models.ForeignKey(E5Centres, models.DO_NOTHING, db_column='Centre', verbose_name='Centre', default='', blank=True, null=True)
+    activitytype = models.ForeignKey(E2ActivityType, models.CASCADE, db_column='ActivityTypeID', default=0, verbose_name='Type of activity')  # Field name made lowercase.
+    centre = models.ForeignKey(E5Centres, models.CASCADE, db_column='Centre', verbose_name='Centre', default='', blank=True, null=True)
     activity = models.CharField(db_column='ActivityName', max_length=50, default='', verbose_name='Name of activity')
     description = models.TextField(db_column='ActivityDescription', default='', verbose_name='Description', blank=True, null=True)  # Field name made lowercase.
     person = models.ForeignKey(E1People, models.CASCADE, db_column='PersonID', blank=True, null=True, verbose_name='Person in charge')  # Field name made lowercase.
@@ -137,7 +137,7 @@ class E4Groups(models.Model):
 
 class R1ActivitiesLog(models.Model):
     activitieslogid = models.AutoField(db_column='ActivitiesLogID', primary_key=True)  # Field name made lowercase.
-    activity = models.ForeignKey(E2Activities, models.DO_NOTHING, db_column='ActivityID', verbose_name='Activity')  # Field name made lowercase.
+    activity = models.ForeignKey(E2Activities, models.CASCADE, db_column='ActivityID', verbose_name='Activity')  # Field name made lowercase.
     activitydate = models.DateField(db_column='ActivityDate', verbose_name='Date')  # Field name made lowercase.
 
     class Meta:
@@ -177,15 +177,15 @@ class R2Participants(models.Model):
 class R3CategoryAssign(models.Model):
     categoryassignid = models.AutoField(db_column='CategoryAssignID', primary_key=True)  # Field name made lowercase.
     person = models.ForeignKey(E1People, models.CASCADE, db_column='PersonID', default=1)  # Field name made lowercase.
-    category = models.ForeignKey(E3Categories, models.DO_NOTHING, db_column='CategoryID', default=1)  # Field name made lowercase.
+    category = models.ForeignKey(E3Categories, models.CASCADE, db_column='CategoryID', default=1)  # Field name made lowercase.
     startdate = models.DateField(db_column='StartDate', verbose_name='Start date')  # Field name made lowercase.
     enddate = models.DateField(db_column='EndDate', blank=True, null=True, editable=False)  # Field name made lowercase.
 
     class Meta:
         #managed = False
         db_table = 'r3_category_assign'
-        verbose_name = "category"
-        verbose_name_plural = "Person's categories"
+        verbose_name = "category (status)"
+        verbose_name_plural = "Categories (Status)"
         unique_together = (("person", "category"))
 
     def __str__(self):
@@ -203,6 +203,9 @@ class R4GroupAssign(models.Model):
         #managed = False
         db_table = 'r4_group_assign'
         verbose_name = "Group"
+
+    def __str__(self):
+        return self.group.group
 
 
 class R5AttendedByAssign(models.Model):
@@ -222,7 +225,7 @@ class R5AttendedByAssign(models.Model):
 
 class R6ActivityAssign(models.Model):
     activityassignid = models.AutoField(db_column='ActivityAssignID', primary_key=True)  # Field name made lowercase.
-    activity = models.ForeignKey(E2Activities, models.DO_NOTHING, db_column='ActivityID')  # Field name made lowercase.
+    activity = models.ForeignKey(E2Activities, models.CASCADE, db_column='ActivityID')  # Field name made lowercase.
     #member = models.ManyToManyField(E1People, db_column='PersonID')  # Field name made lowercase.
     member = models.ForeignKey(E1People, models.CASCADE, db_column='PersonID', blank=True)  # Field name made lowercase.
 
