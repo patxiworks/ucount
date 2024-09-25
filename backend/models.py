@@ -239,40 +239,37 @@ class R6ActivityAssign(models.Model):
         return self.member.surname + ' ' + self.member.firstname
 
 
-'''class R7PersonCentreAssign(models.Model):
-    centrepersonid = models.AutoField(db_column='PersonCentre', primary_key=True)  # Field name made lowercase.
-    person = models.ForeignKey(E1People, models.DO_NOTHING, db_column='PersonID', default=1)  # Field name made lowercase.
-    centre = models.ForeignKey(E5Centres, models.DO_NOTHING, db_column='CentreID')  # Field name made lowercase.
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+class ActivitySummary(models.Model):
+    summaryid = models.AutoField(db_column='SummaryID', primary_key=True)
+    eventid = models.IntegerField(db_column='EventID', blank=True, null=True) # represents ActivitiesLogID
+    activitydate = models.DateField(db_column='ActivityDate', blank=True, null=True)  # Field name made lowercase.
+    activityid = models.IntegerField(db_column='ActivityID', blank=True, null=True)
+    activityname = models.CharField(db_column='ActivityName', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    activitycentre = models.CharField(db_column='ActivityCentre', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    activitytype = models.CharField(db_column='ActivityType', max_length=15, blank=True, null=True)  # Field name made lowercase.
+    activitytypename = models.CharField(db_column='ActivityTypeName', max_length=100, blank=True, null=True)  # Field name made lowercase.
+    participantid = models.IntegerField(db_column='ParticipantID', blank=True, null=True)
+    participantname = models.TextField(db_column='ParticipantName', blank=True, null=True)  # Field name made lowercase. This field type is a guess.
+    participantcategory = models.CharField(db_column='ParticipantCategory', max_length=6, blank=True, null=True)  # Field name made lowercase.
+    participantcentre = models.CharField(db_column='ParticipantCentre', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    participantgroup = models.CharField(db_column='ParticipantGroup', max_length=50, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        #managed = False
-        #db_table = 'r4_group_assign'
-        verbose_name = "Centres of people"
+        managed = False  # Created from a view. Don't remove.
+        db_table = 'activity_summary'
 
 
-class R8ActivityCentreAssign(models.Model):
-    centrepersonid = models.AutoField(db_column='ActivityCentre', primary_key=True)  # Field name made lowercase.
-    activity = models.ForeignKey(E2Activities, models.DO_NOTHING, db_column='ActivityID')  # Field name made lowercase.
-    centre = models.ForeignKey(E5Centres, models.DO_NOTHING, db_column='CentreID')  # Field name made lowercase.
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        #managed = False
-        #db_table = 'r4_group_assign'
-        verbose_name = "Centres of activiies"
-
-
-class R9GroupCentreAssign(models.Model):
-    centrepersonid = models.AutoField(db_column='GroupCentre', primary_key=True)  # Field name made lowercase.
-    group = models.ForeignKey(E4Groups, models.DO_NOTHING, db_column='GroupID')  # Field name made lowercase.
-    centre = models.ForeignKey(E5Centres, models.DO_NOTHING, db_column='CentreID')  # Field name made lowercase.
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+class ParticipantSummary(models.Model):
+    summaryid = models.AutoField(db_column='SummaryID', primary_key=True)
+    participantid = models.IntegerField(db_column='ParticipantID', blank=True, null=True)
+    participantname = models.TextField(db_column='ParticipantName', blank=True, null=True)  # Field name made lowercase. This field type is a guess.
+    participantcategory = models.CharField(db_column='ParticipantCategory', max_length=6, blank=True, null=True)  # Field name made lowercase.
+    participantcentre = models.CharField(db_column='ParticipantCentre', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    participantgroup = models.CharField(db_column='ParticipantGroup', max_length=50, blank=True, null=True)  # Field name made lowercase.
+    participantfriendid = models.IntegerField(db_column='ParticipantFriendID', blank=True, null=True)
+    participantfriendname = models.TextField(db_column='ParticipantFriendName', blank=True, null=True)
+    #participantfriendcat = models.TextField(db_column='ParticipantFriendCategory', blank=True, null=True)
 
     class Meta:
-        #managed = False
-        #db_table = 'r4_group_assign'
-        verbose_name = "Centres of activities"'''
+        managed = False  # Created from a view. Don't remove.
+        db_table = 'participant_summary'

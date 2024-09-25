@@ -1,0 +1,59 @@
+{% extends "backend/layouts/base.html" %}
+
+{% block title %} Summary Data {% endblock %} 
+
+{% block content %}
+    
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header card-header-warning">
+            <h4 class="card-title">Summary data</h4>
+            <p class="card-category">Report 117</p>
+          </div>
+          <div class="card-body table-responsive">
+            <table class="table table-hover">
+              <thead class="text-warning">
+                <th class="activity-head">Activity</th>
+								<th class="total-head">Number</th>
+								<th class="total-head">Attendance</th>
+								{% for group in groups %}
+                <th class="group-head">{{group.group}}</th>
+                {% endfor %}
+              </thead>
+              <tbody>
+								{% for item in summary %}
+                <tr>
+									<td>{{item.activity}}</td>
+									<td class="summary-item">{{item.count}}</td>
+									<td class="summary-item">{{item.attendance}}</td>
+									{% for group in groups %}
+									{% if item.groups|get_item:group.group %}
+									<td class="summary-item">{{item.groups|get_item:group.group}}</td>
+									{% else %}
+									<td class="summary-item">0</td>
+									{% endif %}
+									{% endfor %}
+                </tr>
+								{% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <script>
+    $(document).ready(function() {
+      // Javascript method's body can be found in assets/js/demos.js
+      md.initDashboardPageCharts();
+
+    });
+  </script>
+
+{% endblock javascripts %}

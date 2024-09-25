@@ -126,7 +126,7 @@ class CategoryListFilter(admin.SimpleListFilter):
 
 class CategoryAssignInline(admin.TabularInline):
     model = R3CategoryAssign
-    max_num = 2
+    max_num = 5
     extra = 0
 
 class GroupAssignInline(admin.TabularInline):
@@ -160,7 +160,7 @@ class AttendedByAssignInline(admin.TabularInline):
 @admin.register(E1People)
 class E1PeopleAdmin(admin.ModelAdmin):
     list_display = ('fullname', 'group')
-    list_filter = [CategoryListFilter]
+    list_filter = [CategoryListFilter, 'centre']
     inlines = [ CategoryAssignInline, GroupAssignInline, AttendedByAssignInline ]
 
     def fullname(self, obj):
@@ -213,6 +213,7 @@ class ParticipantsInline(admin.TabularInline):
 @admin.register(R1ActivitiesLog)
 class R1ActivitiesLogAdmin(admin.ModelAdmin):
     # Open Events
+    list_display = ('activity', 'activitydate')
     inlines = [ ParticipantsInline, ]
 
     def openActivities(self, obj):
@@ -232,6 +233,7 @@ class R1ActivitiesLogAdmin(admin.ModelAdmin):
 @admin.register(MemberActivities)
 class MemberActivitiesAdmin(admin.ModelAdmin):
     # Closed Events
+    list_display = ('activity', 'activitydate')
     inlines = [ ParticipantsInline, ]
 
     def get_queryset(self, *args, **kwargs):
@@ -264,3 +266,7 @@ class R6ActivityAssignAdmin(admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     #inlines = [ ParticipantsInline, ]'''
+
+
+class ActivitySummaryAdmin(admin.ModelAdmin):
+    model = ActivitySummary

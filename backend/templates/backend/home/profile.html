@@ -1,0 +1,90 @@
+{% extends "backend/layouts/base.html" %}
+
+{% block title %} Dashboard {% endblock %} 
+
+{% block content %}
+
+    <div class="row">
+			<div class="col-md-12">
+      	<h2><i class="large material-icons">person</i> {{participant.surname}}, {{participant.firstname}} {{participant.othername|default_if_none:''}} <small>({{category}})</small></h2>
+			</div>
+    </div>
+    <div class="row">
+      <div class="col-md-2">
+        <div class="card card-chart">
+          <div class="card-body">
+            <p class="card-category">Age</p>
+            <h3 class="card-title"><small>{{participantage|default_if_none:'N/A'}}</small>
+            </h3>
+          </div>
+          
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card card-chart">
+          <div class="card-body">
+            <p class="card-category">Phone number</p>
+            <h3 class="card-title"><small>{{participant.phone|default_if_none:'N/A'}}</small>
+            </h3>
+          </div>
+          
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card card-chart">
+          <div class="card-body">
+            <p class="card-category">Email address</p>
+            <h3 class="card-title"><small>{{participant.email|default_if_none:'N/A'}}</small>
+            </h3>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card card-chart">
+          <div class="card-body">
+            <p class="card-category">Centre</p>
+            <h3 class="card-title">
+              <small>{{centre}}</small>
+            </h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card card-chart">
+          <div class="card-body">
+            <p class="card-category">Group</p>
+            <h3 class="card-title">
+              <small>{{group}}</small>
+            </h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="card card-chart">
+          <div class="card-body">
+            <p class="card-category">Assisted by</p>
+            <h3 class="card-title">
+              <small>{{friend}} {% if friend %}({{friendcat}}){% endif %}</small>
+            </h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <script>
+    $(document).ready(function() {
+      // Javascript method's body can be found in assets/js/demos.js
+      md.initDashboardPageCharts();
+
+    });
+  </script>
+
+{% endblock javascripts %}

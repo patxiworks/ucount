@@ -1,0 +1,140 @@
+{% extends "backend/layouts/base.html" %}
+
+{% block title %} Dashboard: {{activity.activitytypename}} | {{flag}} {% endblock %} 
+
+{% block content %}
+
+    <div class="row">
+			{% for key, value in activityStats.items %}
+      <div class="col-md-4">
+        <div class="card card-chart">
+          <div class="card-body">
+            <p class="card-category">{{value.0}}</p>
+            <h3 class="card-title">{{value.1}}
+              <small></small>
+            </h3>
+          </div>
+          <div class="card-footer">
+            <div class="stats">
+              <i class="material-icons">access_time</i> updated 4 minutes ago
+            </div>
+          </div>
+        </div>
+      </div>
+			{% endfor %}
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header card-header-primary">
+              <h4 class="card-title ">
+								{{activity.activitytypename}}
+							</h4>
+							{% if flag != "activities" %}
+              <p class="card-category">{{activitylabel}} ({% if flag == 'event-participants' %}{{activitydate}}{% else %}{{flag}}{% endif %})</p>
+							{% endif %}
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+								{% if flag == "activities" %}
+                <table id="datatable" class="table">
+                  <thead class=" text-primary">
+                    <th>S/N</th>
+                    <th>Name of activity</th>
+                    <th>No. of participants</th>
+                  </thead>
+                  <tbody>
+										{% for item in activitylist %}
+                    <tr>
+                      <td>{{forloop.counter}}</td>
+                      <td><a href="events/{{item.activityid}}/">{{item.activityname}}</a></td>
+                      <td><a href="participants/{{item.activityid}}/">{{item.unique}}</a>
+                      </td>
+                    </tr>
+										{% endfor %}
+                  </tbody>
+                </table>
+								{% elif flag == "participants" %}
+                <table id="datatable" class="table">
+                  <thead class=" text-primary">
+                    <th>S/N</th>
+                    <th>Attendees</th>
+                    <th></th>
+                  </thead>
+                  <tbody>
+										{% for item in participantlist %}
+                    <tr>
+                      <td>{{forloop.counter}}</td>
+                      <td><a href="{{baseStr}}/participant/{{item.participantid}}/">{{item.participantname}} ({{item.participantcategory}})</a></td>
+                      <td>{{item.participantgroup}}</td>
+                    </tr>
+										{% endfor %}
+                  </tbody>
+                </table>
+								{% elif flag == "events" %}
+                <table id="datatable" class="table">
+                  <thead class=" text-primary">
+                    <th>S/N</th>
+                    <th>Date held</th>
+										<th>No. of participants</th>
+                  </thead>
+                  <tbody>
+										{% for item in eventlist %}
+                    <tr>
+                      <td>{{forloop.counter}}</td>
+                      <td>{{item.activitydate}}</td>
+                      <td><a href="participants/{{item.eventid}}/">{{item.total}}</a></td>
+                    </tr>
+										{% endfor %}
+                  </tbody>
+                </table>
+								{% elif flag == "event-participants" %}
+                <table id="datatable" class="table">
+                  <thead class=" text-primary">
+                    <th>S/N</th>
+                    <th>Attendees</th>
+                    <th>Group</th>
+                  </thead>
+                  <tbody>
+										{% for item in participantlist %}
+                    <tr>
+                      <td>{{forloop.counter}}</td>
+                      <td><a href="{{baseStr}}/participant/{{item.participantid}}/">{{item.participantname}} ({{item.participantcategory}})</a></td>
+                      <td>
+												{% if item.participantgroup %}
+												{{item.participantgroup}}
+												{% else %}
+												<em>No group</em>
+												{% endif %}
+											</td>
+                    </tr>
+										{% endfor %}
+                  </tbody>
+                </table>
+								
+								{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+    </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <script>
+    $(document).ready(function() {
+      // Javascript method's body can be found in assets/js/demos.js
+      md.initDashboardPageCharts();
+			$('#datatable').DataTable({ 
+				bLengthChange: false,
+				language: { search: '', searchPlaceholder: 'Search...' }
+			});
+    });
+  </script>
+
+{% endblock javascripts %}

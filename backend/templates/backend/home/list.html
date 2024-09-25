@@ -1,0 +1,84 @@
+{% extends "backend/layouts/base.html" %}
+
+{% block title %} Dashboard: {{activity.activitytypename}} | {{flag}} {% endblock %} 
+
+{% block content %}
+    
+    <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header card-header-primary">
+              <h4 class="card-title ">
+								{% if category %}
+								{{category}} list
+								{% else %}
+								People with no group
+								{% endif %}
+							</h4>
+              <!--<p class="card-category">{{activitylabel}} ({{flag}})</p>-->
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="datatable" class="table">
+                  <thead class=" text-primary">
+                    <th>S/N</th>
+                    <th>Full name</th>
+										<th>Age</th>
+										{% if flag == 'group'%}
+										<th>Category</th>
+										{% elif flag == 'category' %}
+										<th>Group</th>
+										{% endif %}
+                    <th>Assisted by</th>
+                  </thead>
+                  <tbody>
+										{% for item in categorylist %}
+                    <tr>
+                      <td>{{forloop.counter}}</td>
+                      <td><a href="{{baseStr}}/participant/{{item.id}}/">{{item.name}}</a></td>
+											
+                      <td>{{item.age|default_if_none:'-'}}</td>
+											{% if flag == 'group'%}
+											<td>{{item.category}}</td>
+											{% elif flag == 'category' %}
+                      <td>
+												{% if item.group %}
+												<a href="{{baseStr}}/group/{{item.groupid}}/">{{item.group}}</a>
+												{% else %}
+												<em><a href="{{baseStr}}/group/0/">No group</a></em>
+												{% endif %}
+                      </td>
+											{% endif %}
+											{% if item.friend %}
+                      <td>{{item.friend}} ({{item.friendcat}})</td>
+											{% else %}
+											<td>None</td>
+											{% endif %}
+                    </tr>
+										{% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+    </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <script>
+    $(document).ready(function() {
+      // Javascript method's body can be found in assets/js/demos.js
+      md.initDashboardPageCharts();
+			$('#datatable').DataTable({ 
+				bLengthChange: false,
+				language: { search: '', searchPlaceholder: 'Search...' }
+			});
+    });
+  </script>
+
+{% endblock javascripts %}
