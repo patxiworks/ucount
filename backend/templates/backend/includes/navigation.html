@@ -1,9 +1,26 @@
-
+			{% if request.user.is_authenticated %}
       <!-- Navbar -->
       <nav class="navbar navbar-expand-lg navbar-transparent navbar-absolute fixed-top ">
         <div class="container-fluid">
-          <div class="navbar-wrapper">
-            <a class="navbar-brand" href="#">Victoria Island sg</a>
+          <div class="navbar-wrapper dropdown">
+						{% if usercheck.session.level == 3 %}
+            <a class="navbar-brand" data-toggle="dropdown" href="#">{{centre}}</a>
+						<div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownCentre">
+							{% for ctr in usercheck.session.ctrlist %}
+							{% if ctr.centre != usercheck.session.centre.0.centre %}
+							<div class="dropdown-item">
+								<form method="post" action="{{baseStr}}/switch/{{ctr.centreid}}/{{user.id}}/">
+							    {% csrf_token %}
+							    <button type="submit" class="nav-button">{{ctr.centre}}</button>
+								</form>
+							</div>
+							<div class="dropdown-divider"></div>
+							{% endif %}
+							{% endfor %}
+						</div>
+						{% else %}
+						<a class="navbar-brand" href="/">{{centre}}</a>
+						{% endif %}
           </div>
           <button class="navbar-toggler" type="button" data-toggle="collapse" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
             <span class="sr-only">Toggle navigation</span>
@@ -13,7 +30,6 @@
           </button>
 
           <div class="collapse navbar-collapse justify-content-end">
-          {% if request.user.is_authenticated %}
 
             <!--<form class="navbar-form">
               <div class="input-group no-border">
@@ -57,15 +73,21 @@
                   </p>
                 </a>
                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownProfile">
-                  <a class="dropdown-item" href="/page-user.html">Profile</a>
+                  <span class="dropdown-userinfo" href="#">Hello, {{user.first_name}}</span>
                   <div class="dropdown-divider"></div>
-                  <a class="dropdown-item" href="{# url 'logout' #}" >Log out</a>
+									<!--<div class="dropdown-item">
+										<form method="post" action="{% url 'logout' %}">
+									    {% csrf_token %}
+									    <button type="submit" class="logout-button">Log out</button>
+										</form>
+									</div>-->
+									<a class="dropdown-item" href="{% url 'logout' %}" >Log out</a>
                 </div>
               </li>
             </ul>
-
-          {% endif %}
           </div>
-        
+ 
         </div>
       </nav>
+			<!-- End Navbar -->
+			{% endif %}

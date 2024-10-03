@@ -4,7 +4,7 @@
 
 {% block content %}
 
-    <div class="row">
+    <div class="row profile">
 			<div class="col-md-12">
       	<h2><i class="large material-icons">person</i> {{participant.surname}}, {{participant.firstname}} {{participant.othername|default_if_none:''}} <small>({{category}})</small></h2>
 			</div>
@@ -57,7 +57,15 @@
           <div class="card-body">
             <p class="card-category">Group</p>
             <h3 class="card-title">
-              <small>{{group}}</small>
+							<small>
+								<a href="{{baseStr}}/group/{{groupid}}/">
+									{% if group %}
+              		{{group}}
+									{% else %}
+									<em>No group</em>
+									{% endif %}
+								</a>
+							</small>
             </h3>
           </div>
         </div>
@@ -67,24 +75,179 @@
           <div class="card-body">
             <p class="card-category">Assisted by</p>
             <h3 class="card-title">
-              <small>{{friend}} {% if friend %}({{friendcat}}){% endif %}</small>
+							<small>
+							{% if friend %}
+              <a href="{{baseStr}}/participant/{{friendid}}/">{{friend}} {% if friend %}({{friendcat}}){% endif %}</a>
+							{% else %}
+							Nobody
+							{% endif %}
+							</small>
             </h3>
           </div>
         </div>
       </div>
     </div>
+		<div class="row chart-row">
+			<div class="card chart-body">
+			<div id="chartDiv" class="chart"></div>
+		</div>
+		</div>
+
 
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
-
+	{{ chartdata|json_script:"data" }}
   <script>
     $(document).ready(function() {
       // Javascript method's body can be found in assets/js/demos.js
       md.initDashboardPageCharts();
-
+			
     });
+		
+		//Get a default chart palette 
+		var chartPalette = JSC.getPalette(); 
+		//Some data for the chart 
+		var items = JSON.parse(document.getElementById('data').textContent); 
+		//Assign colors to data array. 
+		items.forEach(function(item, i) { 
+		  item.color = chartPalette[i]; 
+		  //To keep track visibility 
+		  item.visible = true; 
+		}); 
+  
+		var chartConfig = {
+		  debug: false, 
+		  type: 'calendar year solid', 
+		  calendar_range: ['1/1/24', '12/31/30'], 
+		  annotations: [ 
+		    { 
+		      position: 'top'
+		    } 
+		  ], 
+		  yAxis_label: { 
+		    text: ' ', 
+		    style_fontSize: 12 
+		  }, 
+		  defaultSeries: { 
+		    shape_innerPadding: 0, 
+		    legendEntry_visible: false, 
+		    defaultPoint: { 
+		      outline_color: '#323232', 
+		      opacity: 0.08 
+		    } 
+		  }, 
+			defaultTooltip_label_text: '<b>%id</b>',
+        // The tooltip template for each point.
+      defaultPoint_tooltip: '<b>%name</b>',
+		  legend: {
+				position: 'topleft',
+				template: '%icon %name',
+				defaultEntry: {
+				   style: {
+				      fontWeight: 'normal'
+				   }
+				},
+		    customEntries: items.map(function(item, i) { 
+		      return { 
+		        name: item.name, 
+		        id: 'lid-' + i, 
+		        icon_color: item.color, 
+		        value: item.pattern.date.length.toString(),
+		        events: { 
+		          click: function() {
+		            var item = items[i]; 
+		            if (item.visible) {
+		              hideDays(i); 
+		              item.visible = false; 
+		            } else { 
+		              /* Set visible option first because the option is passed to the chart. */
+		              item.visible = true; 
+		              showDays(i); 
+		            } 
+		          } 
+		        } 
+		      }; 
+		    })
+		  } 
+		}; 
+  
+		//Add a legend entry for holidays 
+		/*chartConfig.legend.customEntries.push({ 
+		  name: 'Holidays', 
+		  value: '', 
+		  lineAbove: { width: 1 }, 
+		  icon: { color: '#ffb77d' } ,
+		});*/
+  
+		// Initialize the chart 
+		var chart; 
+		makeHolidayPoints(initChart);
+		//initChart([])
+		function initChart(holidayPoints) { 
+		  chartConfig.series = [ 
+		    { points: holidayPoints } 
+		  ]; 
+		  chart = JSC.chart( 
+		    'chartDiv', 
+		    chartConfig, 
+		    function(c) { 
+		      showAll(c);
+					/*setTimeout(function() {
+					   c.options({ calendar: { range: ['1/1/2018', '1/1/2030'] } });
+					}, 200);*/
+		    } 
+		  ); 
+		} 
+  
+		function showAll(chartRef) { 
+		  for (var i = 0; i < items.length; i++) { 
+		    showDays(i, chartRef); 
+		  } 
+		} 
+		function hideAll() { 
+		  for (var i = 0; i < items.length; i++) { 
+		    hideDays(i); 
+		  } 
+		} 
+		function hideDays(i) { 
+		  var highlight = chart.highlights('id-' + i); 
+		  highlight && highlight.remove(); 
+		  // Gray out legend entry 
+		  chart 
+		    .legends(0) 
+		    .entries('lid-' + i) 
+		    .options({ color: '#bababa' }); 
+		} 
+		function showDays(i, chartRef) {
+		  var id = 'id-' + i, 
+		    config = items[i]; 
+		  var c = chartRef || chart; 
+		  var highlight = c.highlights(id); 
+		  config.id = id; 
+		  config.outline = { width: 0 }; 
+		  if (!highlight) { 
+		    c.highlights.add(config); 
+		  } 
+		  // Restore legend entry color 
+		  c.legends(0) 
+		    .entries('lid-' + i) 
+		    .options({ color: 'black' }); 
+		} 
+  
+		function makeHolidayPoints(callback) {
+		      var holidayPoints = items.map(function( item ) { 
+		        return { 
+		          date: item.pattern,
+		          outline: {
+		            width: 1 
+		          }, 
+		          tooltip: '<b>%name</b><br/>' + item.fname 
+		        }; 
+		      }); 
+		      callback(holidayPoints); 
+		} 
   </script>
 
 {% endblock javascripts %}

@@ -7,12 +7,19 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 from django.core.validators import validate_email
+from django.contrib.auth.models import User
 
 EVENT_CHOICES = (
     ("open", "Open"),
     ("closed", "Closed")
 )
 EVENT_DEFAULT = "open"
+USER_LEVELS = (
+    (0, 0),
+    (1, 1),
+    (2, 2),
+    (3, 3),
+)
 
 
 class E6Cities(models.Model):
@@ -44,6 +51,10 @@ class E5Centres(models.Model):
     def __str__(self):
         return self.centre
 
+
+'''class ExtendedUser(AbstractUser):
+    centre = models.ForeignKey(E5Centres, models.CASCADE, db_column='Centre', verbose_name='Centre', default='', blank=True, null=True)
+'''
 
 class E1People(models.Model):
     personid = models.AutoField(db_column='PersonID', primary_key=True)  # Field name made lowercase.
@@ -135,10 +146,18 @@ class E4Groups(models.Model):
         return self.centre.acronym + " - " + self.group
 
 
+class UserStatus(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    level = models.IntegerField(db_column='Level', choices=USER_LEVELS, default=0)
+    centre = models.ForeignKey(E5Centres, models.CASCADE, db_column='Centre', blank=True, null=True)
+    group = models.ForeignKey(E4Groups, models.CASCADE, db_column='Group', blank=True, null=True)
+
+
 class R1ActivitiesLog(models.Model):
     activitieslogid = models.AutoField(db_column='ActivitiesLogID', primary_key=True)  # Field name made lowercase.
     activity = models.ForeignKey(E2Activities, models.CASCADE, db_column='ActivityID', verbose_name='Activity')  # Field name made lowercase.
     activitydate = models.DateField(db_column='ActivityDate', verbose_name='Date')  # Field name made lowercase.
+    activityenddate = models.DateField(db_column='ActivityEndDate', verbose_name='End Date', blank=True, null=True)
 
     class Meta:
         #managed = False
@@ -168,6 +187,22 @@ class R2Participants(models.Model):
         db_table = 'r2_participants'
         verbose_name = "Participant"
         verbose_name_plural = "Participants"
+        unique_together = (("activitieslogid", "person"))
+
+    def __str__(self):
+        return self.person.surname + ' ' + self.person.firstname
+
+
+class R2Organisers(models.Model):
+    organiserid = models.AutoField(db_column='OrganisersID', primary_key=True)  # Field name made lowercase.
+    activitieslogid = models.ForeignKey(R1ActivitiesLog, models.CASCADE, db_column='ActivitiesLogID', default=0, verbose_name='Activity')  # Field name made lowercase.
+    person = models.ForeignKey(E1People, models.CASCADE, db_column='PersonID', verbose_name='Person')  # Field name made lowercase.
+
+    class Meta:
+        #managed = False
+        db_table = 'r2_organisers'
+        verbose_name = "Organiser"
+        verbose_name_plural = "Organisers"
         unique_together = (("activitieslogid", "person"))
 
     def __str__(self):
@@ -243,6 +278,7 @@ class ActivitySummary(models.Model):
     summaryid = models.AutoField(db_column='SummaryID', primary_key=True)
     eventid = models.IntegerField(db_column='EventID', blank=True, null=True) # represents ActivitiesLogID
     activitydate = models.DateField(db_column='ActivityDate', blank=True, null=True)  # Field name made lowercase.
+    activityenddate = models.DateField(db_column='ActivityEndDate', blank=True, null=True)
     activityid = models.IntegerField(db_column='ActivityID', blank=True, null=True)
     activityname = models.CharField(db_column='ActivityName', max_length=50, blank=True, null=True)  # Field name made lowercase.
     activitycentre = models.CharField(db_column='ActivityCentre', max_length=50, blank=True, null=True)  # Field name made lowercase.
@@ -273,3 +309,4 @@ class ParticipantSummary(models.Model):
     class Meta:
         managed = False  # Created from a view. Don't remove.
         db_table = 'participant_summary'
+

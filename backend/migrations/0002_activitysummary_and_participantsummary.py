@@ -7,7 +7,9 @@ CREATE VIEW activity_summary AS
 SELECT
 --strftime('%Y-%m', ActivityDate) AS YrMonth,
 row_number() OVER () as SummaryID,
+r1_activities_log.ActivitiesLogID as EventID,
 ActivityDate,
+ActivityEndDate,
 e2_activities.ActivityID,
 ActivityName,
 C1.CentreAcronym AS ActivityCentre,
@@ -35,6 +37,7 @@ JOIN e1_people ON r2_participants.PersonID = e1_people.PersonID
 JOIN e5_centres C1 ON e2_activities.Centre = C1.CentreID
 JOIN e5_centres C2 ON e1_people.Centre = C2.CentreID
 ORDER BY ActivityDate ASC;
+SELECT * from activity_summary;
 """
 DROP_SQL_activity = "DROP VIEW IF EXISTS activity_summary;"
 
@@ -66,13 +69,13 @@ JOIN e5_centres ON P1.Centre = e5_centres.CentreID
 GROUP BY ParticipantID
 ORDER BY ParticipantID ASC;
 """
-DROP_SQL_participant = "DROP VIEW IF EXISTS people_summary;"
+DROP_SQL_participant = "DROP VIEW IF EXISTS participant_summary;"
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('backend', '0027_activitysummary_and_peoplesummary'),
+        ('backend', '0001_initial'),
     ]
 
     operations = [

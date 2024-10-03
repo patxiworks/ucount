@@ -2,12 +2,31 @@ from datetime import date
 
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
 
 from .models import *
 
 admin.site.site_header = "YouCount Manager"
 admin.site.site_title = "YouCount Manager"
 admin.site.index_title = "Welcome to YouCount Manager"
+
+
+# Define an inline admin descriptor for UserStatus model
+# which acts a bit like a singleton
+class UserStatusInline(admin.StackedInline):
+    model = UserStatus
+    can_delete = False
+    verbose_name_plural = "User status"
+
+
+# Define a new User admin
+class UserAdmin(BaseUserAdmin):
+    inlines = [UserStatusInline]
+
+# Re-register UserAdmin
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
 
 
 class MembersInline(admin.TabularInline):
@@ -209,12 +228,16 @@ class ParticipantsInline(admin.TabularInline):
     model = R2Participants
     extra = 1
 
+class OrganisersInline(admin.TabularInline):
+    model = R2Organisers
+    extra = 1
+
 
 @admin.register(R1ActivitiesLog)
 class R1ActivitiesLogAdmin(admin.ModelAdmin):
     # Open Events
     list_display = ('activity', 'activitydate')
-    inlines = [ ParticipantsInline, ]
+    inlines = [ OrganisersInline, ParticipantsInline ]
 
     def openActivities(self, obj):
         if obj.activity.activitytype.activityformat == "open":
@@ -234,7 +257,7 @@ class R1ActivitiesLogAdmin(admin.ModelAdmin):
 class MemberActivitiesAdmin(admin.ModelAdmin):
     # Closed Events
     list_display = ('activity', 'activitydate')
-    inlines = [ ParticipantsInline, ]
+    inlines = [ OrganisersInline, ParticipantsInline, ]
 
     def get_queryset(self, *args, **kwargs):
         return super().get_queryset(*args, **kwargs).filter(activity__activitytype__activityformat = "closed")
@@ -268,5 +291,5 @@ class R6ActivityAssignAdmin(admin.ModelAdmin):
     #inlines = [ ParticipantsInline, ]'''
 
 
-class ActivitySummaryAdmin(admin.ModelAdmin):
-    model = ActivitySummary
+'''class ActivitySummaryAdmin(admin.ModelAdmin):
+    model = ActivitySummary'''

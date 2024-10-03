@@ -1,139 +1,247 @@
 {% extends "backend/layouts/base.html" %}
 
-{% block title %} Dashboard: {{activity.activitytypename}} | {{flag}} {% endblock %} 
+{% block title %} Dashboard {% endblock %} 
 
 {% block content %}
 
-    <div class="row">
-			{% for key, value in activityStats.items %}
-      <div class="col-md-4">
-        <div class="card card-chart">
-          <div class="card-body">
-            <p class="card-category">{{value.0}}</p>
-            <h3 class="card-title">{{value.1}}
+    <div class="row index">
+      <div class="col-lg-3 col-md-6 col-sm-6">
+        <div class="card card-stats">
+          <div class="card-header card-header-warning card-header-icon">
+            
+            <p class="card-category">No. of people</p>
+            <h3 class="card-title">{{people_count}}
               <small></small>
             </h3>
           </div>
+          
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6">
+        <div class="card card-stats">
+          <div class="card-header card-header-success card-header-icon">
+            
+            <p class="card-category">No. of activities</p>
+            <h3 class="card-title">{{activity_count}}</h3>
+          </div>
+          
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6">
+        <div class="card card-stats">
+          <div class="card-header card-header-danger card-header-icon">
+            
+            <p class="card-category">Avg monthly att.</p>
+            <h3 class="card-title">{{month_avg_att}}</h3>
+          </div>
+          
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6">
+        <div class="card card-stats">
+          <div class="card-header card-header-info card-header-icon">
+            
+            <p class="card-category">Avg activity att.</p>
+            <h3 class="card-title">{{activity_avg}}</h3>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+    <div class="row">
+			{% for x in chartcounter %}
+      <div class="col-md-4">
+        <div class="card card-chart">
+          <div class="card-header chart-{{x}}">
+            <div class="ct-chart ct-chart-{{x}}" id="chart-{{x}}"></div>
+          </div>
+          <div class="card-body">
+            <h4 id="chart-title-{{x}}" class="card-title"></h4>
+          </div>
           <div class="card-footer">
             <div class="stats">
-              <i class="material-icons">access_time</i> updated 4 minutes ago
+              <i class="material-icons">access_time</i> Attendance in {{year}}
             </div>
           </div>
         </div>
       </div>
 			{% endfor %}
-    </div>
-    
-    <div class="row">
-        <div class="col-md-12">
-          <div class="card">
-            <div class="card-header card-header-primary">
-              <h4 class="card-title ">
-								{{activity.activitytypename}}
-							</h4>
-							{% if flag != "activities" %}
-              <p class="card-category">{{activitylabel}} ({% if flag == 'event-participants' %}{{activitydate}}{% else %}{{flag}}{% endif %})</p>
-							{% endif %}
-            </div>
-            <div class="card-body">
-              <div class="table-responsive">
-								{% if flag == "activities" %}
-                <table id="datatable" class="table">
-                  <thead class=" text-primary">
-                    <th>S/N</th>
-                    <th>Name of activity</th>
-                    <th>No. of participants</th>
-                  </thead>
-                  <tbody>
-										{% for item in activitylist %}
-                    <tr>
-                      <td>{{forloop.counter}}</td>
-                      <td><a href="events/{{item.activityid}}/">{{item.activityname}}</a></td>
-                      <td><a href="participants/{{item.activityid}}/">{{item.unique}}</a>
-                      </td>
-                    </tr>
-										{% endfor %}
-                  </tbody>
-                </table>
-								{% elif flag == "participants" %}
-                <table id="datatable" class="table">
-                  <thead class=" text-primary">
-                    <th>S/N</th>
-                    <th>Attendees</th>
-                    <th></th>
-                  </thead>
-                  <tbody>
-										{% for item in participantlist %}
-                    <tr>
-                      <td>{{forloop.counter}}</td>
-                      <td><a href="{{baseStr}}/participant/{{item.participantid}}/">{{item.participantname}} ({{item.participantcategory}})</a></td>
-                      <td>{{item.participantgroup}}</td>
-                    </tr>
-										{% endfor %}
-                  </tbody>
-                </table>
-								{% elif flag == "events" %}
-                <table id="datatable" class="table">
-                  <thead class=" text-primary">
-                    <th>S/N</th>
-                    <th>Date held</th>
-										<th>No. of participants</th>
-                  </thead>
-                  <tbody>
-										{% for item in eventlist %}
-                    <tr>
-                      <td>{{forloop.counter}}</td>
-                      <td>{{item.activitydate}}</td>
-                      <td><a href="participants/{{item.eventid}}/">{{item.total}}</a></td>
-                    </tr>
-										{% endfor %}
-                  </tbody>
-                </table>
-								{% elif flag == "event-participants" %}
-                <table id="datatable" class="table">
-                  <thead class=" text-primary">
-                    <th>S/N</th>
-                    <th>Attendees</th>
-                    <th>Group</th>
-                  </thead>
-                  <tbody>
-										{% for item in participantlist %}
-                    <tr>
-                      <td>{{forloop.counter}}</td>
-                      <td><a href="{{baseStr}}/participant/{{item.participantid}}/">{{item.participantname}} ({{item.participantcategory}})</a></td>
-                      <td>
-												{% if item.participantgroup %}
-												{{item.participantgroup}}
-												{% else %}
-												<em>No group</em>
-												{% endif %}
-											</td>
-                    </tr>
-										{% endfor %}
-                  </tbody>
-                </table>
-								
-								{% endif %}
-              </div>
+			<!--
+      <div class="col-md-4">
+        <div class="card card-chart">
+          <div class="card-header card-header-warning">
+            <div class="ct-chart" id="websiteViewsChart"></div>
+          </div>
+          <div class="card-body">
+            <h4 class="card-title">Email Subscriptions</h4>
+            <p class="card-category">Last Campaign Performance</p>
+          </div>
+          <div class="card-footer">
+            <div class="stats">
+              <i class="material-icons">access_time</i> campaign sent 2 days ago
             </div>
           </div>
         </div>
-        
+      </div>
+      <div class="col-md-4">
+        <div class="card card-chart">
+          <div class="card-header card-header-danger">
+            <div class="ct-chart" id="completedTasksChart"></div>
+          </div>
+          <div class="card-body">
+            <h4 class="card-title">Completed Tasks</h4>
+            <p class="card-category">Last Campaign Performance</p>
+          </div>
+          <div class="card-footer">
+            <div class="stats">
+              <i class="material-icons">access_time</i> campaign sent 2 days ago
+            </div>
+          </div>
+        </div>
+      </div>
+			-->
+    </div>
+    <div class="row">
+      <div class="col-lg-6 col-md-12">
+        <div class="card">
+          <div class="card-header card-header-primary">
+            <h4 class="card-title">Today's birthdays</h4>
+          </div>
+          <div class="card-body table-responsive">
+            <table class="table table-hover">
+              <tbody>
+								{% if birthdays %}
+								{% for bd in birthdays %}
+                <tr>
+									<td>{{forloop.counter}}</td>
+                  <td><a href="/participant/{{bd.id}}/">{{bd.info.0.participantname}} ({{bd.info.0.participantcategory}})</a></td>
+                  <td>{{bd.age}} years</td>
+									<td>
+										{{bd.info.0.participantgroup|default_if_none:'No group'}}
+									</td>
+                </tr>
+								{% endfor %}
+								{% else %}
+								<tr><td>No birthdays today!</td></tr>
+								{% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 col-md-12">
+        <div class="card">
+          <div class="card-header card-header-primary">
+            <h4 class="card-title">Upcoming birthdays</h4>
+          </div>
+          <div class="card-body table-responsive">
+            <table class="table table-hover">
+              <tbody>
+								{% if birthdays_month %}
+								{% for bd in birthdays_month %}
+                <tr>
+									<td>{{forloop.counter}}</td>
+                  <td><a href="/participant/{{bd.id}}/">{{bd.info.0.participantname}} ({{bd.info.0.participantcategory}})</a></td>
+                  <td>{{bd.dob|date:"d M"}}</td>
+									<td>
+										{{bd.info.0.participantgroup|default_if_none:'No group'}}
+									</td>
+                </tr>
+								{% endfor %}
+								{% else %}
+								<tr><td>No upcoming birthdays!</td></tr>
+								{% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
-
+	{{ chartdata|json_script:"data" }}
   <script>
     $(document).ready(function() {
+			var classes = ['warning','success','warning']
+			var items = JSON.parse(document.getElementById('data').textContent);
+			let shuffled = items
+						.map(value => ({ value, sort: Math.random() }))
+						.sort((a, b) => a.sort - b.sort)
+						.map(({ value }) => value) 
+			let selected = shuffled.slice(0, {{number}});
+
+			function pageChart(data) {
+				
+				for (i=0; i<data.length; i++) {
+					var chartData = {
+		        labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
+		        series: [data[i].counts]
+					};
+					var chartOptions = {
+		        axisX: {
+		          showGrid: false
+		        },
+		        low: 0,
+		        high: Math.max(...data[i].counts)+10,
+		        chartPadding: {
+		          top: 0,
+		          right: 5,
+		          bottom: 0,
+		          left: 0
+		        }
+		      };
+					var responsiveOptions = [
+		        ['screen and (max-width: 640px)', {
+		          seriesBarDistance: 5,
+		          axisX: {
+		            labelInterpolationFnc: function(value) {
+		              return value[0];
+		            }
+		          }
+		        }]
+		      ];
+					var chart = Chartist.Bar('#chart-'+i, chartData, chartOptions, responsiveOptions);
+					var $tooltip = $('<div class="tooltip tooltip-hidden"></div>').appendTo($('.ct-chart-'+i));
+
+					$(document).on('mouseenter', '.ct-bar', function() {
+					  var seriesDesc = $(this).closest('.ct-series').attr('ct:meta'),
+					      value = $(this).attr('ct:value');
+						
+
+					  $tooltip.text(value + " Customers " + seriesDesc);
+					  // $tooltip.css({
+					  //   left: $(this).attr('x2') - 1,
+					  //   top: $(this).attr('y2') - $tooltip.height() + 20
+					  // });
+					  $tooltip.removeClass('tooltip-hidden');
+					});
+
+					$(document).on('mouseleave', '.ct-bar', function() {
+					  $tooltip.addClass('tooltip-hidden');
+					});
+
+					$(document).on('mousemove', '.ct-bar', function(event) {
+					  $tooltip.css({
+					    left: event.offsetX + 5,
+					    top: event.offsetY - $tooltip.height() - 30
+					  });
+					});
+					md.startAnimationForLineChart(chart);
+					$('#chart-title-'+i).html(data[i].activity)
+					$('.chart-'+i).addClass('card-header-'+classes[i])
+				}
+			}
+			
+			pageChart(selected)
+
+      //start animation for the Emails Subscription Chart
+      //md.startAnimationForBarChart(websiteViewsChart);
       // Javascript method's body can be found in assets/js/demos.js
-      md.initDashboardPageCharts();
-			$('#datatable').DataTable({ 
-				bLengthChange: false,
-				language: { search: '', searchPlaceholder: 'Search...' }
-			});
+      //md.initDashboardPageCharts();
+		
     });
   </script>
 
