@@ -24,10 +24,14 @@
                     <th>S/N</th>
                     <th>Full name</th>
 										<th>Age</th>
+										{% if not centre and usercheck.session.level == 3 %}
+										<th>Centre</th>
+										{% else %}
 										{% if flag == 'group'%}
 										<th>Category</th>
 										{% elif flag == 'category' %}
 										<th>Group</th>
+										{% endif %}
 										{% endif %}
                     <th>Assisted by</th>
                   </thead>
@@ -38,6 +42,9 @@
                       <td><a href="{{baseStr}}/participant/{{item.id}}/">{{item.name}}</a></td>
 											
                       <td>{{item.age|default_if_none:'-'}}</td>
+											{% if not centre and usercheck.session.level == 3 %}
+											<td>{{item.centre}}</td>
+											{% else %}
 											{% if flag == 'group'%}
 											<td>{{item.category}}</td>
 											{% elif flag == 'category' %}
@@ -49,8 +56,9 @@
 												{% endif %}
                       </td>
 											{% endif %}
+											{% endif %}
 											{% if item.friend %}
-                      <td>{{item.friend}} ({{item.friendcat}})</td>
+                      <td><a href="{{baseStr}}/participant/{{item.friendid}}/">{{item.friend}} ({{item.friendcat}})</a></td>
 											{% else %}
 											<td>None</td>
 											{% endif %}

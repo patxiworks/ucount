@@ -49,7 +49,10 @@ def switch_session(request, ctr_id, user_id):
     valid = check_valid_user(request)
     if 'validuser' in valid and valid['validuser']:
         user = request.user.userstatus
-        user.centre = E5Centres.objects.get(pk=ctr_id)
+        if ctr_id:
+            user.centre = E5Centres.objects.get(pk=ctr_id)
+        else:
+            user.centre = None
         user.save()
     return redirect("/")
 

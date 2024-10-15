@@ -4,25 +4,25 @@
 
 {% block content %}
 
-    <div class="row">
+		{% if activityStats.items %}
+    <div class="row top activity">
 			{% for key, value in activityStats.items %}
       <div class="col-md-4">
         <div class="card card-chart">
           <div class="card-body">
             <p class="card-category">{{value.0}}</p>
-            <h3 class="card-title">{{value.1}}
-              <small></small>
-            </h3>
+            <h3 class="card-title">{{value.1|floatformat:"0"}}</h3>
           </div>
-          <div class="card-footer">
+          <!--<div class="card-footer">
             <div class="stats">
               <i class="material-icons">access_time</i> updated 4 minutes ago
             </div>
-          </div>
+          </div>-->
         </div>
       </div>
 			{% endfor %}
     </div>
+		{% endif %}
     
     <div class="row">
         <div class="col-md-12">

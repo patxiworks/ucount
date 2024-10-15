@@ -2,9 +2,24 @@
 
 {% block title %} Dashboard {% endblock %} 
 
+	<!-- Specific Page CSS goes HERE  -->
+	{% block stylesheets %}
+	<style>
+		.main-panel > .content {
+			background: url(/static/backend/assets/img/citys.jpg);
+		}
+		h2 {
+			font-weight: 500;
+		}
+		.card.card-chart .card-category {
+		    color: #e33838;
+		}
+	</style>
+	{% endblock stylesheets %}
+
 {% block content %}
 
-    <div class="row profile">
+    <div class="row top profile">
 			<div class="col-md-12">
       	<h2><i class="large material-icons">person</i> {{participant.surname}}, {{participant.firstname}} {{participant.othername|default_if_none:''}} <small>({{category}})</small></h2>
 			</div>

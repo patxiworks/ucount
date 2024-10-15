@@ -7,9 +7,12 @@ from django.contrib.auth.models import User
 
 from .models import *
 
-admin.site.site_header = "YouCount Manager"
-admin.site.site_title = "YouCount Manager"
-admin.site.index_title = "Welcome to YouCount Manager"
+from import_export.admin import ImportExportModelAdmin
+from import_export import resources
+
+admin.site.site_header = "uCount Manager"
+admin.site.site_title = "uCount Manager"
+admin.site.index_title = "Welcome to uCount Manager"
 
 
 # Define an inline admin descriptor for UserStatus model
@@ -176,9 +179,18 @@ class AttendedByAssignInline(admin.TabularInline):
     max_num = 1
     extra = 0
 
+
+class E1PeopleResource(resources.ModelResource):
+
+    class Meta:
+        model = E1People
+        import_id_fields= ['personid']
+
 @admin.register(E1People)
-class E1PeopleAdmin(admin.ModelAdmin):
-    list_display = ('fullname', 'group')
+#class E1PeopleAdmin(admin.ModelAdmin):
+class E1PeopleAdmin(ImportExportModelAdmin):
+    resource_classes = [E1PeopleResource]
+    list_display = ('fullname', 'centre', 'group')
     list_filter = [CategoryListFilter, 'centre']
     inlines = [ CategoryAssignInline, GroupAssignInline, AttendedByAssignInline ]
 

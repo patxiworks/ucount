@@ -79,9 +79,11 @@ def get_ctr(request, value='acronym'):
 def category_counts(req):
     ctr = get_ctr(req)
     cats = E3Categories.objects.all()
+    cur_ctr = {} if not ctr else {'participantcentre': ctr}
     def get_count(cat):
         return ParticipantSummary.objects \
-        .filter(participantcentre=ctr, participantcategory=cat) \
+        .filter(**cur_ctr) \
+        .filter(participantcategory=cat) \
         .values('participantid','participantname','participantcategory') \
         .annotate(
             unique=Count('participantid', distinct=True)
@@ -106,6 +108,6 @@ def site_variables(request):
             'catcount': sum(item[0] for item in cats.values()),
             'usercheck': check_valid_user(request),
             'user': request.user,
-            'centre': get_ctr(request, 'centre')
+            'ctr': get_ctr(request, 'centre')
         }
     return context

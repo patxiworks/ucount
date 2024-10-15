@@ -2,16 +2,7 @@
 =========================================================
  Material Dashboard - v2.1.2
 =========================================================
-
- Product Page: https://www.creative-tim.com/product/material-dashboard
- Copyright 2019 Creative Tim (https://www.creative-tim.com)
- Licensed under MIT (https://github.com/creativetimofficial/material-dashboard/blob/master/LICENSE.md)
-
- Coded by Creative Tim
-
-=========================================================
-
- The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. -->
+-->
 {% load static %}
 
 <!DOCTYPE html>
@@ -32,185 +23,17 @@
   <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
   <!--     Fonts and icons     -->
   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons" />
+	<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
   <!-- CSS Files -->
   <link href="{% static 'backend/assets/css/material-dashboard.css' %}" rel="stylesheet" />
   <!-- CSS Just for demo purpose, don't include it in your project -->
-  <link href="{% static 'backend/assets/demo/demo.css' %}" rel="stylesheet" />
+  <link href="{% static 'backend/assets/css/custom.css' %}" rel="stylesheet" />
 
 	<!-- Specific Page CSS goes HERE  -->
 	{% block stylesheets %}
 	<style>
-		.row.index {
-		    margin-top: -30px;
-		}
-		.wide-panel {
-				width: 100% !important;
-		}
-		.sidebar .logo {
-		    padding: 10px 0px
-		}
-		.sidebar .logo .simple-text {
-		    text-transform: none;
-				font-size: 24px;
-				font-weight: bold;
-				display: flex;
-				justify-content: center;
-				align-items: flex-end;
-				color: #0e0f0f;
-		}
-		.navbar.navbar-transparent {
-			background-color: #5c5cce !important;
-		}
-		.navbar .navbar-brand {
-			color: #fff;
-		}
-		.navbar .collapse .navbar-nav .nav-item .nav-link {
-		    font-size: 18px;
-		    text-transform: none;
-		    color: #bbbbf6;
-		}
-		.navbar .collapse .navbar-nav .nav-item.dropdown {
-				border-left: 1px solid #6e6ed2;
-		}
-		.navbar .collapse .navbar-nav .nav-item .nav-link span {
-				font-weight: bold;
-		}
-		.dropdown-menu .dropdown-item {
-			font-size: 17px;
-			font-weight: 300;
-			color: #5c5cce;
-		}
-		.dropdown-menu .dropdown-item span {
-				font-weight: normal;
-				color: #d78c87;
-		}
-		.dropdown-item .nav-button {
-			  width: 100%;
-				border:0;
-				padding:0;
-				background:transparent;
-				color: #5c5cce;
-				cursor: pointer;
-		}
-		.dropdown-item .nav-button:hover {
-				color: #fff;
-		}
-		.dropdown-menu .dropdown-userinfo {
-				margin: 0 0.3125rem;
-				padding: 0 1.5rem;
-		}
-		.sidebar[data-color="purple"] li.active > a {
-		    background-color: #529021;
-				box-shadow: none;
-		}
-		.sidebar[data-color="purple"] li.active > a:hover {
-		    background-color: #407a1b;
-		}
-		.row.profile h2 {
-				margin-top: 20px;
-		}
-		.main-panel > .footer {
-		    border-top: 1px solid #bab9b9;
-		    background-color: #141313;
-		}
-		.footer {
-				padding: 0;
-				color: #eee;
-		}
-		.card .card-header-summary:not(.card-header-icon):not(.card-header-text) {
-			box-shadow: 0 4px 20px 0px rgba(0, 0, 0, 0.14), 0 7px 10px -5px rgb(37 70 16 / 40%);
-		}
-		.card .card-header-summary:not(.card-header-icon):not(.card-header-text) {
-			background: linear-gradient(60deg, #529021, #407a1b);
-		}
-		.card-title a {
-				color: #9c27b0;
-		}
-		.card-title a:hover {
-				color: #ca65db;
-		}
-		.index .card-stats .card-header.card-header-icon {
-				text-align: center;
-				margin: 5px 0;
-		}
-		.text-warning {
-		    color: #1f4107 !important;
-		    font-weight: bold !important;
-		}
-		.dataTables_wrapper .col-md-6 {
-				flex: none;
-				max-width: none;
-		}
-		.dataTables_filter {
-				margin-bottom: 10px;
-				text-align: left;
-		}
-		.dataTables_filter label {
-				width: 200px;
-		}
-		.dataTables_info, .dataTables_paginate {
-				margin-top: 10px;
-		}
-		.table > tbody > tr > td {
-				padding: 12px 8px !important;
-		}
-		.dataTable > tbody > tr > td {
-				padding: 5px;
-		}
-		.table thead tr th {
-		    font-weight: 400;
-		}
-		th.activity-head { width:300px}
-		th.total-head { width:200px; text-align: center; }
-		th.group-head { width:100px; text-align: center; }
-		td.summary-item { text-align: center;}
-		.chart-row {
-			/*background: #fff;
-			margin-top: 30px*/
-		}
-		.chart-body {
-			overflow-x: auto; 
-			overflow-y: hidden; 
-			padding: 20px 0 30px 10px;
-		}
-		.chart {
-			width: 100%;
-			height: 220px;
-			margin: 0px auto;
-			padding: 0 10px 0 0;
-		}
-		.tooltip {
-		  position: relative;
-		/*   top: 20px;
-		  left: 20px; */
-		  font-size: 1.3em;
-		  width: 150px;
-		  height: auto;
-		  z-index: 1;
-		  padding: 8px;
-		  background-color: #ffffff;
-		/*   background: rgba(0, 0, 0, 0.3); */
-		  opacity: 0.8;
-		  border: 1px solid #cacaca;
-		  border-radius: 3px;
-		  box-shadow: 2px 2px 10px 2px rgba(0, 0, 0, 0.1);
-		  text-align: center;
-		  pointer-events: none;
-		  color: black;
-		  transition: opacity .2s ease-out;
-		/*   transition: left .1s ease-out;
-		  transition: top .1s ease-out; */
-		}
 
-		.tooltip.tooltip-hidden {
-		  opacity: 0;
-		}
-		@media only screen and (max-width: 760px) {
-			.chart {
-				width: 1000px;
-		  }
-		}
 	</style>
 	{% endblock stylesheets %}
 
@@ -253,13 +76,13 @@
   </div>
 	
 	{% if usercheck.validuser %}
-	<!--
-  {% include 'backend/includes/fixed-plugin.html' %}
+
+  {# include 'backend/includes/fixed-plugin.html' #}
 
   {% include 'backend/includes/scripts.html' %}
 
   {% include 'backend/includes/scripts-sidebar.html' %}
-	-->
+
   
   <!-- Specific Page JS goes HERE  -->
   {% block javascripts %}
@@ -269,5 +92,15 @@
 	{% endblock javascripts %}
 	{% endif %}
   
+	<script>
+		$(document).ready(function() {
+			var path = window.location.pathname
+			var menu = path.split('/')
+			if (menu[1] = 'activity') {
+				activity = menu[2]
+				$("."+activity).addClass('active')
+			}
+		})
+	</script>
 </body>
 </html>

@@ -1,9 +1,9 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.template.defaulttags import register
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
 from django.db.models import Count
 from backend.models import *
-from backend.context import get_ctr
+from backend.context import get_ctr, check_valid_user
 
 from datetime import date, datetime, timedelta
 
@@ -14,7 +14,7 @@ def get_item(dictionary, key):
     return dictionary.get(key)
 
 def user_level_check(user):
-    return user.userstatus.level > 1
+    return user.userstatus.level > 0
 
 def login(request):
     return render(
@@ -51,10 +51,27 @@ def fetch_participant_category(participant_id):
     data = list(ParticipantSummary.objects.filter(participantid=participant_id).values())
     return data[0]['participantcategory'] if data else None
 
+def fetch_friend_info(participantid):
+    friend = list(ParticipantSummary.objects \
+                    .values() \
+                    .filter(participantfriendid=participantid))
+        
+    friendname = friend[0]['participantname'] if friend else None
+    friendid = friend[0]['participantid'] if friend else None
+    friendcat = fetch_participant_category(friendid)
+
+    return {
+        'id': friendid,
+        'name': friendname,
+        'cat': friendcat
+    }
+
 def activity_stats(activity, ctr):
+    cur_ctr = {} if not ctr else {'participantcentre': ctr}
     activities = ActivitySummary.objects \
     .values('activityid') \
-    .filter(participantcentre=ctr, activitytype=activity) \
+    .filter(**cur_ctr) \
+    .filter(activitytype=activity) \
     .annotate(
         total=Count('activitytype'),
         unique=Count('participantid', distinct=True)
@@ -62,7 +79,8 @@ def activity_stats(activity, ctr):
 
     participants = list(ActivitySummary.objects \
     .values('activitytype') \
-    .filter(participantcentre=ctr, activitytype=activity) \
+    .filter(**cur_ctr) \
+    .filter(activitytype=activity) \
     .annotate(
         unique=Count('participantid', distinct=True)
     ))
@@ -76,13 +94,14 @@ def activity_stats(activity, ctr):
 
 def chart_data(participant_id, ctr):
     activities = E2ActivityType.objects.all().order_by('activitytypename')
-
+    cur_ctr = {} if not ctr else {'participantcentre': ctr}
     items = []
     for activity in activities:
         item = {}
         entries = list(ActivitySummary.objects \
         .values('activitydate','activityenddate') \
-        .filter(participantcentre=ctr, participantid=participant_id, activitytype=activity.activitytype))
+        .filter(**cur_ctr) \
+        .filter(participantid=participant_id, activitytype=activity.activitytype))
 
         dates = []
         for entry in entries:
@@ -106,12 +125,13 @@ def chart_data(participant_id, ctr):
 
 def dashboard_data(ctr):
     activities = E2ActivityType.objects.all().order_by('activitytypename')
-
+    cur_ctr = {} if not ctr else {'activitycentre': ctr}
     items = []
     for activity in activities:
         entries = list(ActivitySummary.objects \
             .values('activitydate') \
-            .filter(activitycentre=ctr, activitytype=activity.activitytype, activitydate__year=datetime.now().year))
+            .filter(**cur_ctr) \
+            .filter(activitytype=activity.activitytype, activitydate__year=datetime.now().year))
 
         counts = dict()
         # get list of months (by number)
@@ -156,9 +176,13 @@ def birthday_list(people, which='any'):
 @user_passes_test(user_level_check, redirect_field_name=None, login_url="/group/which/")
 def index(request):
     ctr = get_ctr(request)
-    ctrid = fetch_centre_id(ctr)
-    people = E1People.objects.filter(centre=ctrid)
-    activities = E2Activities.objects.filter(centre=ctrid)
+    if ctr:
+        ctrid = fetch_centre_id(ctr)
+        people = E1People.objects.filter(centre=ctrid)
+        activities = E2Activities.objects.filter(centre=ctrid)
+    else:
+        people = E1People.objects.all()
+        activities = E2Activities.objects.all()        
 
     activitydata = dashboard_data(ctr)
     data = [x['counts'] for x in activitydata]
@@ -171,7 +195,7 @@ def index(request):
         {
             'year': datetime.now().year,
             'chartdata': dashboard_data(ctr),
-            'chartcounter': range(0,3),
+            'chartcounter': range(0,6),
             'birthdays': birthday_list(people, 'today'),
             'birthdays_month': birthday_list(people),
             'people_count': people.count(),
@@ -183,8 +207,13 @@ def index(request):
 
 
 def get_user_group(request):
-    groupid = request.user.userstatus.group.groupid
-    ctrid = request.user.userstatus.centre.centreid
+    groupid = None
+    ctrid = None
+    try:
+        groupid = request.user.userstatus.group.groupid
+        ctrid = request.user.userstatus.centre.centreid
+    except:
+        pass
     if groupid:
         return redirect("/group/"+str(groupid)+"/")
     else:
@@ -193,12 +222,15 @@ def get_user_group(request):
 
 # Get all [unique] activities
 @login_required(login_url="/login/")
+@user_passes_test(user_level_check, redirect_field_name=None, login_url="/group/which/")
 def get_activity_list(request, activity_type):
     ctr = get_ctr(request)
+    cur_ctr = {} if not ctr else {'participantcentre': ctr}
     activity = E2ActivityType.objects.get(activitytype = activity_type)
     activities = ActivitySummary.objects \
     .values('activityname','activityid') \
-    .filter(participantcentre=ctr, activitytype=activity_type) \
+    .filter(**cur_ctr) \
+    .filter(activitytype=activity_type) \
     .annotate(
         total=Count('activitytype'),
         unique=Count('participantid', distinct=True)
@@ -218,13 +250,16 @@ def get_activity_list(request, activity_type):
 
 # Get all [unique] participants of an activity
 @login_required(login_url="/login/")
+@user_passes_test(user_level_check, redirect_field_name=None, login_url="/group/which/")
 def get_participants(request, activity_type, activity_id):
     ctr = get_ctr(request)
+    cur_ctr = {} if not ctr else {'participantcentre': ctr}
     activity = E2ActivityType.objects.get(activitytype = activity_type)
     event = E2Activities.objects.get(activityid = activity_id)
     participants = ActivitySummary.objects \
     .values('participantname','participantid','participantcategory','participantgroup') \
-    .filter(participantcentre=ctr, activitytype=activity_type, activityid=activity_id) \
+    .filter(**cur_ctr) \
+    .filter(activitytype=activity_type, activityid=activity_id) \
     .annotate(
         total=Count('activitytype'),
         unique=Count('participantid', distinct=True)
@@ -244,12 +279,15 @@ def get_participants(request, activity_type, activity_id):
 
 # Get all instances (i.e. events) of an activity
 @login_required(login_url="/login/")
+@user_passes_test(user_level_check, redirect_field_name=None, login_url="/group/which/")
 def get_events(request, activity_type, activity_id):
     ctr = get_ctr(request)
+    cur_ctr = {} if not ctr else {'participantcentre': ctr}
     activity = E2ActivityType.objects.get(activitytype = activity_type)
     event = E2Activities.objects.get(activityid = activity_id)
     events = ActivitySummary.objects.all() \
-    .filter(participantcentre=ctr, activityid=activity_id) \
+    .filter(**cur_ctr) \
+    .filter(activityid=activity_id) \
     .values('activitydate','activityid','eventid') \
     .annotate(
         total=Count('activityid'),
@@ -269,14 +307,17 @@ def get_events(request, activity_type, activity_id):
 
 # Get all participants of events
 @login_required(login_url="/login/")
+@user_passes_test(user_level_check, redirect_field_name=None, login_url="/group/which/")
 def get_event_participants(request, activity_type, activity_id, event_id):
     ctr = get_ctr(request)
+    cur_ctr = {} if not ctr else {'participantcentre': ctr}
     activity = E2ActivityType.objects.get(activitytype = activity_type)
     event = E2Activities.objects.get(activityid = activity_id)
     eventinfo = R1ActivitiesLog.objects.get(activitieslogid = event_id)
     participants = ActivitySummary.objects \
     .values('participantid','participantname','participantcategory','participantgroup') \
-    .filter(participantcentre=ctr, activitytype=activity_type, eventid=event_id) \
+    .filter(**cur_ctr) \
+    .filter(activitytype=activity_type, eventid=event_id) \
     .annotate(
         total=Count('activitytype'),
         #unique=Count('participantid', distinct=True)
@@ -295,44 +336,66 @@ def get_event_participants(request, activity_type, activity_id, event_id):
     )
 
 @login_required(login_url="/login/")
+@user_passes_test(user_level_check, redirect_field_name=None, login_url="/group/which/")
 def get_summary(request):
     ctr = get_ctr(request)
-    centre = E5Centres.objects.get(acronym=ctr)
-    groups = E4Groups.objects.filter(centre=centre.centreid)
+    cur_ctr = {} if not ctr else {'participantcentre': ctr}
+    if ctr:
+        centre = E5Centres.objects.get(acronym=ctr)
+        groups = list(E4Groups.objects.filter(centre=centre.centreid).values('group'))
+        groups.append({'group':None}) # for participants without groups
+    else:
+        userinfo = check_valid_user(request)
+        ctrlist = list(userinfo['session']['ctrlist'])
+        groups = [{'group':item.acronym} for item in ctrlist]
     activities = E2ActivityType.objects.all().order_by('activitytypename')
     items = []
 
     for activity in activities:
         summary = {}
+        if ctr:
+            fieldlist = ['activitytype', 'participantgroup']
+            pivot = 'participantgroup'
+        else:
+            fieldlist = ['activitytype', 'participantcentre']
+            pivot = 'participantcentre'
         participants = ActivitySummary.objects \
-        .values('activitytype', 'participantgroup') \
-        .filter(participantcentre=ctr, activitytype=activity.activitytype) \
-        .annotate(
-            unique=Count('participantid', distinct=True)
+            .values(*fieldlist) \
+            .filter(**cur_ctr) \
+            .filter(activitytype=activity.activitytype) \
+            .annotate(
+                unique=Count('participantid', distinct=True)
         )
+        #print(participants)
         actgroups = {}
         for p in participants:
-            actgroups[p['participantgroup']] = p['unique']
+            actgroups[p[pivot]] = p['unique']
 
         attendance = list(ActivitySummary.objects \
-        .values('activitytype') \
-        .filter(participantcentre=ctr, activitytype=activity.activitytype) \
-        .annotate(
-            unique=Count('participantid', distinct=True)
-        ))
+            .values('activitytype') \
+            .filter(**cur_ctr) \
+            .filter(activitytype=activity.activitytype) \
+            .annotate(
+                unique=Count('participantid', distinct=True)
+            )
+        )
+        #print(attendance)
         
         act = ActivitySummary.objects \
-        .values('activityid') \
-        .filter(participantcentre=ctr, activitytype=activity.activitytype) \
-        .annotate(
-            total=Count('activitytype'),
-        )
+            .values('activityid') \
+            .filter(**cur_ctr) \
+            .filter(activitytype=activity.activitytype) \
+            .annotate(
+                total=Count('activitytype'),
+            )
+        #print(act)
 
         summary['activity'] = activity.activitytypename
         summary['count'] = act.count()
         summary['attendance'] = attendance[0]['unique'] if len(participants) else 0
         summary['groups'] = actgroups
         items.append(summary)
+        #print(summary)
     
     return render(
         request,
@@ -346,6 +409,7 @@ def get_summary(request):
 
 
 @login_required(login_url="/login/")
+@user_passes_test(user_level_check, redirect_field_name=None, login_url="/group/which/")
 def get_participant(request, participant_id):
     ctr = get_ctr(request)
     participant = E1People.objects.get(personid=participant_id)
@@ -356,6 +420,9 @@ def get_participant(request, participant_id):
             unique=Count('participantid', distinct=True)
         ))
     
+    friend = fetch_friend_info(participantinfo[0]['participantid'])
+    centre_name = fetch_centre_name(participantinfo[0]['participantcentre'])
+    
     return render(
         request,
         "backend/home/profile.html",
@@ -363,23 +430,26 @@ def get_participant(request, participant_id):
             'participant': participant,
             'participantage': get_age(participant.dofb) if participant.dofb else None,
             'category': participantinfo[0]['participantcategory'],
-            'centre': fetch_centre_name(participantinfo[0]['participantcentre']),
+            'centre': centre_name,
             'group': participantinfo[0]['participantgroup'],
-            'groupid': fetch_group_id(participantinfo[0]['participantgroup'], fetch_centre_id(ctr)),
-            'friend': participantinfo[0]['participantfriendname'],
-            'friendcat': fetch_participant_category(participantinfo[0]['participantfriendid']),
-            'friendid': participantinfo[0]['participantfriendid'],
-            'chartdata': chart_data(participantinfo[0]['participantid'], ctr),
+            'groupid': fetch_group_id(participantinfo[0]['participantgroup'], fetch_centre_id(participantinfo[0]['participantcentre'])),
+            'friend': friend['name'],
+            'friendcat': friend['cat'],
+            'friendid': friend['id'],
+            'chartdata': chart_data(participantinfo[0]['participantid'], participantinfo[0]['participantcentre']),
         }
     )
 
 
 @login_required(login_url="/login/")
+@user_passes_test(user_level_check, redirect_field_name=None, login_url="/group/which/")
 def get_category_list(request, cat):
     ctr = get_ctr(request)
+    cur_ctr = {} if not ctr else {'participantcentre': ctr}
     persons = ParticipantSummary.objects \
         .values() \
-        .filter(participantcentre=ctr, participantcategory=cat) \
+        .filter(**cur_ctr) \
+        .filter(participantcategory=cat) \
         .annotate(
             unique=Count('participantid', distinct=True)
         )
@@ -395,14 +465,18 @@ def get_category_list(request, cat):
                 .filter(group=person['participantgroup'], centre=fetch_centre_id(ctr))
         group = group[0] if group else None
 
+        friend = fetch_friend_info(person['participantid'])
+
         item = {}
         item['id'] = person['participantid']
         item['name'] = person['participantname']
+        item['centre'] = person['participantcentre']
         item['age'] = get_age(dofb) if dofb else None
         item['group'] = person['participantgroup']
         item['groupid'] = group['groupid'] if group else None
-        item['friend'] = person['participantfriendname']
-        item['friendcat'] = fetch_participant_category(person['participantfriendid'])
+        item['friend'] = friend['name']
+        item['friendid'] = friend['id']
+        item['friendcat'] = friend['cat']
         people.append(item)
     
 
@@ -418,13 +492,16 @@ def get_category_list(request, cat):
 
 
 @login_required(login_url="/login/")
+@user_passes_test(user_level_check, redirect_field_name=None, login_url="/group/which/")
 def get_group_list(request, groupid):
     ctr = get_ctr(request)
+    cur_ctr = {} if not ctr else {'participantcentre': ctr}
     if groupid:
         group = fetch_group_name(groupid)
         persons = ParticipantSummary.objects \
             .values() \
-            .filter(participantcentre=ctr, participantgroup=group) \
+            .filter(**cur_ctr) \
+            .filter(participantgroup=group) \
             .annotate(
                 unique=Count('participantid', distinct=True)
             )
@@ -432,22 +509,26 @@ def get_group_list(request, groupid):
         group = None
         persons = ParticipantSummary.objects \
             .values() \
-            .filter(participantcentre=ctr, participantgroup__isnull=True) \
+            .filter(**cur_ctr) \
+            .filter(participantgroup__isnull=True) \
             .annotate(
                 unique=Count('participantid', distinct=True)
             )
 
     people = []
     for person in persons:
+        friend = fetch_friend_info(person['participantid'])
         dofb = E1People.objects.values('dofb').get(pk=person['participantid'])['dofb']
         item = {}
         item['id'] = person['participantid']
         item['name'] = person['participantname']
         item['age'] = get_age(dofb) if dofb else None
+        item['centre'] = person['participantcentre']
         item['group'] = person['participantgroup']
         item['category'] = person['participantcategory']
-        item['friend'] = person['participantfriendname']
-        item['friendcat'] = fetch_participant_category(person['participantfriendid'])
+        item['friend'] = friend['name']
+        item['friendid'] = friend['id']
+        item['friendcat'] = friend['cat']
         people.append(item)
 
     return render(

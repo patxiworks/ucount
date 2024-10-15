@@ -2,9 +2,19 @@
 
 {% block title %} Dashboard {% endblock %} 
 
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+	<style>
+		.row.charts {
+			flex-wrap: nowrap;
+			overflow-x: scroll;
+		}
+	</style>
+{% endblock stylesheets %}
+
 {% block content %}
 
-    <div class="row index">
+    <div class="row top index">
       <div class="col-lg-3 col-md-6 col-sm-6">
         <div class="card card-stats">
           <div class="card-header card-header-warning card-header-icon">
@@ -32,7 +42,7 @@
           <div class="card-header card-header-danger card-header-icon">
             
             <p class="card-category">Avg monthly att.</p>
-            <h3 class="card-title">{{month_avg_att}}</h3>
+            <h3 class="card-title">{{month_avg_att|floatformat:"2"}}</h3>
           </div>
           
         </div>
@@ -42,13 +52,13 @@
           <div class="card-header card-header-info card-header-icon">
             
             <p class="card-category">Avg activity att.</p>
-            <h3 class="card-title">{{activity_avg}}</h3>
+            <h3 class="card-title">{{activity_avg|floatformat:"2"}}</h3>
           </div>
           
         </div>
       </div>
     </div>
-    <div class="row">
+    <div class="row charts">
 			{% for x in chartcounter %}
       <div class="col-md-4">
         <div class="card card-chart">
@@ -165,7 +175,7 @@
 	{{ chartdata|json_script:"data" }}
   <script>
     $(document).ready(function() {
-			var classes = ['warning','success','warning']
+			var classes = ['warning','success','warning','success','warning','success']
 			var items = JSON.parse(document.getElementById('data').textContent);
 			let shuffled = items
 						.map(value => ({ value, sort: Math.random() }))
@@ -182,7 +192,7 @@
 					};
 					var chartOptions = {
 		        axisX: {
-		          showGrid: false
+		          showGrid: true
 		        },
 		        low: 0,
 		        high: Math.max(...data[i].counts)+10,

@@ -8,8 +8,13 @@
       <div class="col-md-12">
         <div class="card">
           <div class="card-header card-header-summary">
-            <h4 class="card-title">Summary data</h4>
-            <p class="card-category">Report 117</p>
+						<div class="summary-title">
+            	<h4 class="card-title">Summary data</h4>
+            	<p class="card-category">Report 117</p>
+						</div>
+						<div class="summary-widgets">
+							<span class="datetimepicker">fdada</span>
+						</div>
           </div>
           <div class="card-body table-responsive">
             <table class="table table-hover">
@@ -18,7 +23,11 @@
 								<th class="total-head">Number</th>
 								<th class="total-head">Attendance</th>
 								{% for group in groups %}
+								{% if group.group %}
                 <th class="group-head">{{group.group}}</th>
+								{% else %}
+								<th class="group-head">No group</th>
+								{% endif %}
                 {% endfor %}
               </thead>
               <tbody>
@@ -52,7 +61,26 @@
     $(document).ready(function() {
       // Javascript method's body can be found in assets/js/demos.js
       md.initDashboardPageCharts();
-
+			
+			$('.datetimepicker').datetimepicker({
+			            // Formats
+			            // follow MomentJS docs: https://momentjs.com/docs/#/displaying/format/
+			            format: 'DD-MM-YYYY hh:mm A',
+            
+			            // Your Icons
+			            // as Bootstrap 4 is not using Glyphicons anymore
+			            icons: {
+			                time: 'fa fa-clock-o',
+			                date: 'fa fa-calendar',
+			                up: 'fa fa-chevron-up',
+			                down: 'fa fa-chevron-down',
+			                previous: 'fa fa-chevron-left',
+			                next: 'fa fa-chevron-right',
+			                today: 'fa fa-check',
+			                clear: 'fa fa-trash',
+			                close: 'fa fa-times'
+			            }
+			        });
     });
   </script>
 
