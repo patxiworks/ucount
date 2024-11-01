@@ -1,0 +1,59 @@
+{
+"rtm": {
+  "flag": "activities", 
+  "activity": {
+    "activitytypeid": 9, 
+    "activitytype": "rtm", 
+    "activitytypename": "Monthly recollections", 
+    "activityformat": "open", 
+    "serialnoonreport": 1
+  }, 
+  "activitylist": [
+    {
+      "activityname": "1st Sunday Whitesands recollection", 
+      "activityid": 3, 
+      "total": 3, 
+      "unique": 3
+    }, 
+    {
+      "activityname": "2nd Sunday Whitesands recollection", 
+      "activityid": 4, 
+      "total": 8, 
+      "unique": 5
+    }
+  ], 
+  "activityStats": {
+    "count": ["Number of activities", 2], 
+    "average": ["Average attendance", 4], 
+    "total": ["Total attendance", 5]
+  }
+},
+"ccp": {
+  "flag": "activities", 
+  "activity": {
+    "activitytypeid": 1, 
+    "activitytype": "ccp", 
+    "activitytypename": "Circles of cooperators", 
+    "activityformat": "closed", 
+    "serialnoonreport": 1
+  }, "activitylist": [
+    {
+      "activityname": "Ikoyi circle", 
+      "activityid": 8, 
+      "total": 3, 
+      "unique": 2
+    }, 
+    {
+      "activityname": "Lasode circle", 
+      "activityid": 2, 
+      "total": 3, 
+      "unique": 3
+    }
+  ], 
+  "activityStats": {
+    "count": ["Number of activities", 2], 
+    "average": ["Average attendance", 2], 
+    "total": ["Total attendance", 5]
+  }
+}
+}

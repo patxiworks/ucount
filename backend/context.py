@@ -100,10 +100,13 @@ def site_variables(request):
     if not request.user.is_anonymous:
         request.session['userstatus'] = get_session_var(request)
         cats = category_counts(request)
+        activities = list(E2ActivityType.objects.all().order_by('activitytypename').values())
+
+        #print(activities)
         
         context = {
             'baseStr': '',
-            'mof': E2ActivityType.objects.all().order_by('activitytypename').values(),
+            'mof': activities,
             'cats': cats,
             'catcount': sum(item[0] for item in cats.values()),
             'usercheck': check_valid_user(request),

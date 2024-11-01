@@ -6,6 +6,7 @@ from backend.models import *
 from backend.context import get_ctr, check_valid_user
 
 from datetime import date, datetime, timedelta
+import json, os
 
 # Create views here.
 
@@ -226,25 +227,29 @@ def get_user_group(request):
 def get_activity_list(request, activity_type):
     ctr = get_ctr(request)
     cur_ctr = {} if not ctr else {'participantcentre': ctr}
-    activity = E2ActivityType.objects.get(activitytype = activity_type)
-    activities = ActivitySummary.objects \
+    activity = E2ActivityType.objects.filter(activitytype = activity_type).values()[0]
+    activities = list(ActivitySummary.objects \
     .values('activityname','activityid') \
     .filter(**cur_ctr) \
     .filter(activitytype=activity_type) \
     .annotate(
         total=Count('activitytype'),
         unique=Count('participantid', distinct=True)
-    )
+    ))
+
+    output = {
+        'flag': 'activities',
+        'activity': activity,
+        'activitylist': activities,
+        'activityStats': activity_stats(activity_type, ctr)
+    }
+
+    #print(output)
     
     return render(
         request,
         "backend/home/activity.html",
-        {
-            'flag': 'activities',
-            'activity': activity,
-            'activitylist': activities,
-            'activityStats': activity_stats(activity_type, ctr)
-        }
+        output
     )
 
 
@@ -292,16 +297,19 @@ def get_events(request, activity_type, activity_id):
     .annotate(
         total=Count('activityid'),
     )
-    
-    return render(
-        request,
-        "backend/home/activity.html",
-        {
+
+    output = {
             'flag': 'events',
             'activity': activity,
             'activitylabel': event.activity,
             'eventlist': events,
         }
+    print(output)
+    
+    return render(
+        request,
+        "backend/home/activity.html",
+        output
     )
 
 
@@ -322,17 +330,20 @@ def get_event_participants(request, activity_type, activity_id, event_id):
         total=Count('activitytype'),
         #unique=Count('participantid', distinct=True)
     )
-    
-    return render(
-        request,
-        "backend/home/activity.html",
-        {
+
+    output = {
             'flag': 'event-participants',
             'activity': activity,
             'activitylabel': event.activity,
             'activitydate': eventinfo.activitydate,
             'participantlist': participants,
         }
+    #print(output)
+    
+    return render(
+        request,
+        "backend/home/activity.html",
+        output
     )
 
 @login_required(login_url="/login/")
