@@ -32,15 +32,19 @@ admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
 
-class MembersInline(admin.TabularInline):
+'''class MembersInline(admin.TabularInline):
     model = R6ActivityAssign
-    extra = 1
+    extra = 1'''
 
+class OrganisersInline(admin.TabularInline):
+    model = R2Organisers
+    extra = 1
 
 class E2ActivitiesAdmin(admin.ModelAdmin):
     model = E2Activities
-    list_display = ('activity', 'person')
+    list_display = ('activity', 'description', 'organisers')
     list_filter = ['activitytype__activitytype']
+    inlines = [ OrganisersInline, ]
 
     def get_exclude(self, request, obj=None):
         if obj:
@@ -53,6 +57,13 @@ class E2ActivitiesAdmin(admin.ModelAdmin):
             return ['centre']
         else:
             return []
+
+    def organisers(self, obj):
+        organisers = list(R2Organisers.objects.filter(activity=obj.activityid))
+        if not organisers:
+            return '-'
+        else:
+            return organisers
 
     '''def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "person":
@@ -240,16 +251,16 @@ class ParticipantsInline(admin.TabularInline):
     model = R2Participants
     extra = 1
 
-class OrganisersInline(admin.TabularInline):
+'''class OrganisersInline(admin.TabularInline):
     model = R2Organisers
-    extra = 1
+    extra = 1'''
 
 
 @admin.register(R1ActivitiesLog)
 class R1ActivitiesLogAdmin(admin.ModelAdmin):
     # Open Events
     list_display = ('activity', 'activitydate')
-    inlines = [ OrganisersInline, ParticipantsInline ]
+    inlines = [ ParticipantsInline ]
 
     def openActivities(self, obj):
         if obj.activity.activitytype.activityformat == "open":
@@ -269,7 +280,7 @@ class R1ActivitiesLogAdmin(admin.ModelAdmin):
 class MemberActivitiesAdmin(admin.ModelAdmin):
     # Closed Events
     list_display = ('activity', 'activitydate')
-    inlines = [ OrganisersInline, ParticipantsInline, ]
+    inlines = [ ParticipantsInline, ]
 
     def get_queryset(self, *args, **kwargs):
         return super().get_queryset(*args, **kwargs).filter(activity__activitytype__activityformat = "closed")

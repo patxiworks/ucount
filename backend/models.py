@@ -58,7 +58,7 @@ class E5Centres(models.Model):
 
 class E1People(models.Model):
     personid = models.AutoField(db_column='PersonID', primary_key=True)  # Field name made lowercase.
-    surname = models.CharField(db_column='Surname', max_length=30)  # Field name made lowercase.
+    surname = models.CharField(db_column='Surname', max_length=30, verbose_name='Surname')  # Field name made lowercase.
     firstname = models.CharField(db_column='FirstName', max_length=30, verbose_name='First name')  # Field name made lowercase.
     othername = models.CharField(db_column='OtherName', max_length=30, blank=True, null=True, verbose_name='Other name(s)')  # Field name made lowercase.
     dofb = models.DateField(db_column='DofB', blank=True, null=True, verbose_name='Date of birth')  # Field name made lowercase.
@@ -195,7 +195,7 @@ class R2Participants(models.Model):
 
 class R2Organisers(models.Model):
     organiserid = models.AutoField(db_column='OrganisersID', primary_key=True)  # Field name made lowercase.
-    activitieslogid = models.ForeignKey(R1ActivitiesLog, models.CASCADE, db_column='ActivitiesLogID', default=0, verbose_name='Activity')  # Field name made lowercase.
+    activity = models.ForeignKey(E2Activities, models.CASCADE, db_column='ActivityID', default=0, verbose_name='Activity')  # Field name made lowercase.
     person = models.ForeignKey(E1People, models.CASCADE, db_column='PersonID', verbose_name='Person')  # Field name made lowercase.
 
     class Meta:
@@ -203,7 +203,7 @@ class R2Organisers(models.Model):
         db_table = 'r2_organisers'
         verbose_name = "Organiser"
         verbose_name_plural = "Organisers"
-        unique_together = (("activitieslogid", "person"))
+        #unique_together = (("activity", "person"))
 
     def __str__(self):
         return self.person.surname + ' ' + self.person.firstname
