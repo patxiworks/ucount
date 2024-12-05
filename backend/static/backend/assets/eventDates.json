@@ -1,0 +1,54 @@
+{
+    "events": [
+      {
+        "date": "2024-11-23",
+        "name": "Afternoon Workshop",
+        "description": "Technical workshop.",
+        "startTime": "13:00",
+        "endTime": "17:00"
+      },
+      {
+        "date": "2024-11-24",
+        "name": "Morning Workshop",
+        "description": "Technical workshop.",
+        "startTime": "09:00",
+        "endTime": "12:00"
+      },
+      {
+        "date": "2024-11-24",
+        "name": "Afternoon Workshop",
+        "description": "Technical workshop.",
+        "startTime": "13:00",
+        "endTime": "17:00"
+      },
+      {
+        "date": "2024-11-25",
+        "name": "Morning Workshop",
+        "description": "Technical workshop.",
+        "startTime": "09:00",
+        "endTime": "12:00"
+      },
+      {
+        "date": "2024-11-25",
+        "name": "Afternoon Workshop",
+        "description": "Technical workshop.",
+        "startTime": "13:00",
+        "endTime": "17:00"
+      },
+      {
+        "date": "2024-11-26",
+        "name": "Morning Workshop",
+        "description": "Technical workshop.",
+        "startTime": "09:00",
+        "endTime": "12:00"
+      },
+      {
+        "date": "2024-12-02",
+        "name": "Afternoon Workshop",
+        "description": "Technical workshop.",
+        "startTime": "13:00",
+        "endTime": "17:00"
+      }
+      
+    ]
+}

@@ -5,9 +5,14 @@
 #   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
+from datetime import datetime
+from django.utils import timezone
+
 from django.db import models
 from django.core.validators import validate_email
 from django.contrib.auth.models import User
+from django.db.models import Q
+from django.db.models.constraints import UniqueConstraint
 
 EVENT_CHOICES = (
     ("open", "Open"),
@@ -40,6 +45,7 @@ class E5Centres(models.Model):
     centreid = models.AutoField(db_column='CentreID', primary_key=True)  # Field name made lowercase.
     centre = models.CharField(db_column='Centre', default='', max_length=50, verbose_name='Name of centre')  # Field name made lowercase.
     acronym = models.CharField(db_column='CentreAcronym', default='', max_length=50, verbose_name='Acronym')
+    #external = models.CharField(db_column='CentreExternal', default='', max_length=50, verbose_name='External name', blank=True, null=True)
     city = models.ForeignKey(E6Cities, models.CASCADE, db_column='City', default='', verbose_name='City')
 
     class Meta:
@@ -73,6 +79,12 @@ class E1People(models.Model):
         verbose_name = "Person"
         verbose_name_plural = "Persons"
         ordering = ('surname',)
+        constraints = [
+            UniqueConstraint(fields=['surname', 'firstname', 'othername'],
+                             name='unique_names'),
+            UniqueConstraint(fields=['email'],
+                             name='unique_email'),
+        ]
 
     def __str__(self):
         return self.surname + ' ' + self.firstname
@@ -152,6 +164,17 @@ class UserStatus(models.Model):
     centre = models.ForeignKey(E5Centres, models.CASCADE, db_column='Centre', blank=True, null=True)
     group = models.ForeignKey(E4Groups, models.CASCADE, db_column='Group', blank=True, null=True)
 
+    class Meta:
+        verbose_name = "User level and status"
+
+
+class UserPerson(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    person = models.ForeignKey(E1People, models.CASCADE, db_column='Person', blank=True, null=True)
+
+    class Meta:
+        verbose_name = "User person"
+
 
 class R1ActivitiesLog(models.Model):
     activitieslogid = models.AutoField(db_column='ActivitiesLogID', primary_key=True)  # Field name made lowercase.
@@ -176,21 +199,51 @@ class MemberActivities(R1ActivitiesLog):
         verbose_name_plural = "Events (Closed)"
 
 
+class UserPlaceholders(models.Model):
+    placeholderid = models.AutoField(db_column='ParticipantsID', primary_key=True)  # Field name made lowercase.
+    tempid = models.IntegerField(db_column='TempID', blank=True, null=True )  # Field name made lowercase.
+    surname = models.CharField(db_column='Surname', max_length=30, verbose_name='Surname' )
+    firstname = models.CharField(db_column='FirstName', max_length=30, verbose_name='First name')
+    othername = models.CharField(db_column='OtherName', max_length=30, blank=True, null=True, verbose_name='Other name(s)')
+
+    class Meta:
+        verbose_name = "User Placeholder"
+        unique_together = (("surname", "firstname", "othername"))
+
+    def __str__(self):
+        return self.surname + ' ' + self.firstname
+
+
 class R2Participants(models.Model):
     participantsid = models.AutoField(db_column='ParticipantsID', primary_key=True)  # Field name made lowercase.
     activitieslogid = models.ForeignKey(R1ActivitiesLog, models.CASCADE, db_column='ActivitiesLogID', default=0, verbose_name='Activity')  # Field name made lowercase.
-    person = models.ForeignKey(E1People, models.CASCADE, db_column='PersonID', verbose_name='Person')  # Field name made lowercase.
-    #person2 = models.ManyToManyField(E1People, related_name='person2')
+    person = models.ForeignKey(E1People, models.CASCADE, db_column='PersonID', verbose_name='Person', blank=True, null=True)  # Field name made lowercase.
+    entrydate = models.DateTimeField(default=timezone.now, blank=True, db_column='EntryDate')
+    entryuser = models.ForeignKey(User, on_delete=models.SET_NULL, db_column='EnteredBy', verbose_name='Entered by', blank=True, null=True)
+    placeholder = models.ForeignKey(UserPlaceholders, models.SET_NULL, db_column='Placeholder', blank=True, null=True)
 
     class Meta:
         #managed = False
         db_table = 'r2_participants'
         verbose_name = "Participant"
         verbose_name_plural = "Participants"
-        unique_together = (("activitieslogid", "person"))
+        #unique_together = (("activitieslogid", "person"))
+        constraints = [
+            UniqueConstraint(fields=['activitieslogid', 'person'],
+                             condition=Q(placeholder=None),
+                             name='unique_with_person'),
+            UniqueConstraint(fields=['activitieslogid', 'placeholder'],
+                             condition=Q(person=None),
+                             name='unique_with_placeholder'),
+        ]
 
     def __str__(self):
-        return self.person.surname + ' ' + self.person.firstname
+        if self.person:
+            return self.person.surname + ' ' + self.person.firstname
+        elif self.placeholder:
+            return self.placeholder.surname + ' ' + self.placeholder.firstname
+        else:
+            return str(self.participantsid)
 
 
 class R2Organisers(models.Model):

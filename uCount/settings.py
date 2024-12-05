@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import os
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -150,3 +151,7 @@ REST_FRAMEWORK = {
     ],
     #'EXCEPTION_HANDLER': 'backend.api.exceptions.exceptions_handler',
 }
+
+REST_KNOX = {
+       'TOKEN_TTL': timedelta(hours=24),  # default time 10h
+    }

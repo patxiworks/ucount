@@ -22,19 +22,37 @@ class UserStatusInline(admin.StackedInline):
     can_delete = False
     verbose_name_plural = "User status"
 
+class UserPersonInline(admin.TabularInline):
+    model = UserPerson
+    can_delete = False
+    verbose_name = "User person"
 
-# Define a new User admin
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        field = super(UserPersonInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
+        if request._obj_ is not None and db_field.name == "person":
+            kwargs["queryset"] = E1People.objects.filter(centre=request._obj_.userstatus.centre)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+# Define new User admin fields
 class UserAdmin(BaseUserAdmin):
     inlines = [UserStatusInline]
+
+    def get_inline_instances(self, request, obj=None):
+        _inlines = super().get_inline_instances(request, obj=None)
+        if obj.userstatus.level < 2:
+            person_inline = UserPersonInline(self.model, self.admin_site)
+            _inlines.append(person_inline)
+        return _inlines
+
+    def get_form(self, request, obj=None, **kwargs):
+        request._obj_ = obj
+        return super(UserAdmin, self).get_form(request, obj, **kwargs)
 
 # Re-register UserAdmin
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
-
-
-'''class MembersInline(admin.TabularInline):
-    model = R6ActivityAssign
-    extra = 1'''
 
 class OrganisersInline(admin.TabularInline):
     model = R2Organisers
@@ -249,6 +267,7 @@ class E2ActivityTypeAdmin(admin.ModelAdmin):
 
 class ParticipantsInline(admin.TabularInline):
     model = R2Participants
+    fields = ['person','entryuser']
     extra = 1
 
 '''class OrganisersInline(admin.TabularInline):
