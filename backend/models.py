@@ -63,15 +63,15 @@ class E5Centres(models.Model):
 '''
 
 class E1People(models.Model):
-    personid = models.AutoField(db_column='PersonID', primary_key=True)  # Field name made lowercase.
-    surname = models.CharField(db_column='Surname', max_length=30, verbose_name='Surname')  # Field name made lowercase.
-    firstname = models.CharField(db_column='FirstName', max_length=30, verbose_name='First name')  # Field name made lowercase.
-    othername = models.CharField(db_column='OtherName', max_length=30, blank=True, null=True, verbose_name='Other name(s)')  # Field name made lowercase.
-    dofb = models.DateField(db_column='DofB', blank=True, null=True, verbose_name='Date of birth')  # Field name made lowercase.
-    phone = models.CharField(db_column='Phone', max_length=20, blank=True, null=True, verbose_name='Phone number')  # Field name made lowercase.
-    email = models.EmailField(db_column='Email', max_length=150, blank=True, null=True, verbose_name='Email address', validators=[validate_email])  # Field name made lowercase.
+    personid = models.AutoField(db_column='PersonID', primary_key=True)  
+    surname = models.CharField(db_column='Surname', max_length=30, verbose_name='Surname')  
+    firstname = models.CharField(db_column='FirstName', max_length=30, verbose_name='First name')  
+    othername = models.CharField(db_column='OtherName', max_length=30, default='', blank=True, null=True, verbose_name='Other name(s)')  
+    dofb = models.DateField(db_column='DofB', blank=True, null=True, verbose_name='Date of birth')  
+    phone = models.CharField(db_column='Phone', max_length=20, blank=True, null=True, verbose_name='Phone number')  
+    email = models.EmailField(db_column='Email', max_length=150, verbose_name='Email address', validators=[validate_email])  
     centre = models.ForeignKey(E5Centres, models.CASCADE, db_column='Centre', verbose_name='Centre', default='', blank=True, null=True)
-    status = models.IntegerField(db_column='Status', default=1, editable=False)  # Field name made lowercase.
+    status = models.IntegerField(db_column='Status', default=1, editable=False)
 
     class Meta:
         #managed = False
@@ -179,8 +179,8 @@ class UserPerson(models.Model):
 class R1ActivitiesLog(models.Model):
     activitieslogid = models.AutoField(db_column='ActivitiesLogID', primary_key=True)  # Field name made lowercase.
     activity = models.ForeignKey(E2Activities, models.CASCADE, db_column='ActivityID', verbose_name='Activity')  # Field name made lowercase.
-    activitydate = models.DateField(db_column='ActivityDate', verbose_name='Date')  # Field name made lowercase.
-    activityenddate = models.DateField(db_column='ActivityEndDate', verbose_name='End Date', blank=True, null=True)
+    activitydate = models.DateTimeField(db_column='ActivityDate', verbose_name='Date')  # Field name made lowercase.
+    activityenddate = models.DateTimeField(db_column='ActivityEndDate', verbose_name='End Date', blank=True, null=True)
 
     class Meta:
         #managed = False
@@ -200,12 +200,12 @@ class MemberActivities(R1ActivitiesLog):
 
 
 class UserPlaceholders(models.Model):
-    placeholderid = models.AutoField(db_column='ParticipantsID', primary_key=True)  # Field name made lowercase.
+    placeholderid = models.AutoField(db_column='PlaceholderID', primary_key=True)  # Field name made lowercase.
     tempid = models.IntegerField(db_column='TempID', blank=True, null=True )  # Field name made lowercase.
     surname = models.CharField(db_column='Surname', max_length=30, verbose_name='Surname' )
     firstname = models.CharField(db_column='FirstName', max_length=30, verbose_name='First name')
     othername = models.CharField(db_column='OtherName', max_length=30, blank=True, null=True, verbose_name='Other name(s)')
-
+    
     class Meta:
         verbose_name = "User Placeholder"
         unique_together = (("surname", "firstname", "othername"))
@@ -218,9 +218,9 @@ class R2Participants(models.Model):
     participantsid = models.AutoField(db_column='ParticipantsID', primary_key=True)  # Field name made lowercase.
     activitieslogid = models.ForeignKey(R1ActivitiesLog, models.CASCADE, db_column='ActivitiesLogID', default=0, verbose_name='Activity')  # Field name made lowercase.
     person = models.ForeignKey(E1People, models.CASCADE, db_column='PersonID', verbose_name='Person', blank=True, null=True)  # Field name made lowercase.
+    placeholder = models.ForeignKey(UserPlaceholders, models.SET_NULL, db_column='PlaceholderID', blank=True, null=True)
     entrydate = models.DateTimeField(default=timezone.now, blank=True, db_column='EntryDate')
     entryuser = models.ForeignKey(User, on_delete=models.SET_NULL, db_column='EnteredBy', verbose_name='Entered by', blank=True, null=True)
-    placeholder = models.ForeignKey(UserPlaceholders, models.SET_NULL, db_column='Placeholder', blank=True, null=True)
 
     class Meta:
         #managed = False
@@ -338,6 +338,7 @@ class ActivitySummary(models.Model):
     activitytype = models.CharField(db_column='ActivityType', max_length=15, blank=True, null=True)  # Field name made lowercase.
     activitytypename = models.CharField(db_column='ActivityTypeName', max_length=100, blank=True, null=True)  # Field name made lowercase.
     participantid = models.IntegerField(db_column='ParticipantID', blank=True, null=True)
+    participanttype = models.TextField(db_column='ParticipantType', blank=True, null=True)
     participantname = models.TextField(db_column='ParticipantName', blank=True, null=True)  # Field name made lowercase. This field type is a guess.
     participantcategory = models.CharField(db_column='ParticipantCategory', max_length=6, blank=True, null=True)  # Field name made lowercase.
     participantcentre = models.CharField(db_column='ParticipantCentre', max_length=50, blank=True, null=True)  # Field name made lowercase.

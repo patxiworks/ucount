@@ -56,6 +56,7 @@ def placeholder_participants(eventid):
         activitieslogid=activity_log, 
         placeholder__isnull=False
     ).select_related('placeholder')
+    #print(eventid,activity_log,participants_with_placeholders)
 
     # Extract relevant information
     result = [
@@ -83,7 +84,7 @@ def activity_event_participants(request, activity_type, activity_id):
     
     events = ActivitySummary.objects.all() \
     .filter(activityid=activity_id) \
-    .values('activitydate','eventid') \
+    .values('activitydate','activityenddate','eventid') \
     .annotate(
         total=Count('activityid'),
     )
@@ -100,16 +101,16 @@ def activity_event_participants(request, activity_type, activity_id):
     for event in events:
         event['activitydate'] = event['activitydate'].strftime('%Y-%m-%d')
         participants = ActivitySummary.objects \
-        .values('participantid','participantname','participantcategory','participantgroup') \
+        .values('participantid','participanttype','participantname','participantcategory','participantgroup') \
         .filter(activitytype=activity_type, eventid=event['eventid']) \
         .annotate(
             originalid=F('participantid'),
             total=Count('activitytype'),
         )
-        placeholders = placeholder_participants(event['eventid'])
-        event['participantlist'] = list(participants) + placeholders
+        #placeholders = placeholder_participants(event['eventid'])
+        event['participantlist'] = list(participants) # + placeholders
         output['events'].append(event)
-    
+
     return output
 
 
@@ -118,12 +119,13 @@ class ActivityParticipants(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def get(self, request, *args, **kwargs):
-        ctr = 'Vig'
+        ctr = 'Lkg'
         activity_type = kwargs.get('activity_type')
         activity_id = kwargs.get('activity_id')
 
         try:
             participants = activity_event_participants(request, activity_type, activity_id)
+            #print(participants)
         except Exception as e:
             return Response(
                 {'detail': f'An error occurred: {str(e)}'}, 
@@ -251,24 +253,42 @@ class PostAttendance(APIView):
 
 
             # Get the participant IDs from the payload
-            participant_ids = [p.get("participantid") for p in participant_list if p.get("participantid")]
+            participant_ids = [int(p.get("participantid")) for p in participant_list if p.get("participantid")]
 
             # Delete participants that are no longer in the payload
             existing_participants = R2Participants.objects.filter(activitieslogid=activity_log)
+            #print(existing_participants, participant_list, participant_ids)
             for participant in existing_participants:
-                if participant.person and participant.person.personid not in participant_ids:
-                    try:
-                        participant.delete()
-                        participants_deleted.append({
-                            "event_id": activity_log.activitieslogid,
-                            "participant_id": participant.person.personid
-                        })
-                    except Exception as e:
-                        errors.append({
-                            "event_id": activity_log.activitieslogid,
-                            "participant_id": participant.person.personid,
-                            "error": f"Error deleting participant: {str(e)}"
-                        })
+                if participant.person:
+                    if participant.person.personid not in participant_ids:
+                        #print('to delete: ', participant, participant.person.personid)
+                        try:
+                            participant.delete()
+                            participants_deleted.append({
+                                "event_id": activity_log.activitieslogid,
+                                "participant_id": participant.person.personid
+                            })
+                        except Exception as e:
+                            errors.append({
+                                "event_id": activity_log.activitieslogid,
+                                "participant_id": participant.person.personid,
+                                "error": f"Error deleting participant: {str(e)}"
+                            })
+                else:
+                    if participant.placeholder.placeholderid not in participant_ids:
+                        #print('to delete: ', participant, participant.placeholder.placeholderid)
+                        try:
+                            participant.delete()
+                            participants_deleted.append({
+                                "event_id": activity_log.activitieslogid,
+                                "participant_id": participant.placeholder.placeholderid
+                            })
+                        except Exception as e:
+                            errors.append({
+                                "event_id": activity_log.activitieslogid,
+                                "participant_id": participant.placeholder.placeholderid,
+                                "error": f"Error deleting participant: {str(e)}"
+                            })
 
             # Process each participant in the event's participant list
             for participant in event.get("participantlist", []):
@@ -287,7 +307,7 @@ class PostAttendance(APIView):
                     '''
                     person = E1People.objects.filter(personid=participant_id).first()
                     if person:
-                        print(person)
+                        #print(person)
                         # Prepare data for the serializer if person exists
                         participant_data = {
                             'activitieslogid': activity_log.activitieslogid,
@@ -316,7 +336,7 @@ class PostAttendance(APIView):
                             })
                             continue  # Skip to the next participant
 
-                    print(participant_data)
+                    #print(participant_data)
                     serializer = ParticipantsSerializer(data=participant_data)
 
                     if serializer.is_valid():
@@ -363,6 +383,9 @@ class PostAttendance(APIView):
 
 
 class PostPlaceholder(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.AllowAny,)
+    
     def post(self, request, *args, **kwargs):
         # Map participantid to tempid before validation
         data = request.data.copy()
@@ -385,7 +408,7 @@ class ActivitiesByOrganiser(APIView):
     permission_classes = (permissions.AllowAny,)
     
     def get(self, request):
-        print(request.user)
+        #print(request.user)
         user_level = request.user.userstatus.level
         user_ctr = request.user.userstatus.centre
         if hasattr(request.user, 'userperson'):
@@ -433,6 +456,66 @@ class ActivitiesByOrganiser(APIView):
         return Response(serializer.data)
 
 
+class EventsList(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (permissions.AllowAny,)
+    
+    def get(self, request, activity_id, *args, **kwargs):
+        print('dfs')
+        try:
+            # Check if the activity_id exists in E2Activities
+            activity = E2Activities.objects.get(activityid=activity_id)
+        except E2Activities.DoesNotExist:
+            # If the activity_id doesn't exist, return an empty array
+            return Response([], status=status.HTTP_404_NOT_FOUND)
+
+        # Get current date and time
+        current_datetime = now()
+
+        # Query R1ActivitiesLog for the given activity_id
+        records = (
+            R1ActivitiesLog.objects.filter(activity_id=activity_id).filter(Q(activitydate__gt=current_datetime)|Q(activityenddate__gt=current_datetime))
+            .order_by('activitydate')[:10]
+        )
+
+        if records.exists():
+            # Prepare response for found records
+            output = [
+                {
+                    "event": record.activitieslogid,
+                    "date": record.activitydate.date(),
+                    "name": record.activity.activity,
+                    "description": record.activity.description,
+                    "startTime": record.activitydate.time().strftime("%H:%M"),
+                    "endTime": record.activityenddate.time().strftime("%H:%M") if record.activityenddate else None,
+                }
+                for record in records
+            ]
+        else:
+            # Serialize fallback data from E2Activities
+            serializer = E2ActivitiesSerializer(activity)
+            today = current_datetime.date()
+            output = [
+                {
+                    "activity": activity_id,
+                    "date": today,
+                    "name": serializer.data['activity'],
+                    "description": serializer.data['description'],
+                    "startTime": "08:00",
+                    "endTime": "19:00",
+                }
+            ]
+
+        return Response(output, status=status.HTTP_200_OK)
+
+    def handle_exception(self, exc):
+        # Custom error handling for unexpected exceptions
+        return Response(
+            {"error": "An unexpected error occurred.", "details": str(exc)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
 class PostPerson(APIView):
     authentication_classes = (authentication.BasicAuthentication,)
     permission_classes = (permissions.AllowAny,)
@@ -444,6 +527,87 @@ class PostPerson(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# checks if email exists and adds new participant to an event
+class AddParticipant(APIView):
+    authentication_classes = (authentication.BasicAuthentication,)
+    permission_classes = (permissions.AllowAny,)
+    
+    def post(self, request, activitieslogid):
+        email = request.data.get('email', '').strip()
+
+        if not email:
+            return Response({"exists": False, "error": True, "message": "Email is required!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if the email exists
+        try:
+            person = E1People.objects.get(email__iexact=email)
+        except E1People.DoesNotExist:
+            return Response({"exists": False, "error": True, "message": "Email does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+        if person:
+            userinfo = {"firstname": person.firstname, "surname": person.surname}
+
+            try:
+                print(activitieslogid,person.personid)
+                # Add a record to R2Participants. Use get_or_create to ensure no duplicate entries
+                participant, created = R2Participants.objects.get_or_create(
+                    person=person,
+                    activitieslogid_id=activitieslogid,
+                    defaults={
+                        'entrydate': now(),
+                        'entryuser': None,  # Optional, set to None as requested
+                        'placeholder': None  # Optional, set to None as requested
+                    }
+                )
+                print(userinfo)
+                if created:
+                    return Response({"exists": True, "message": "Participant was added successfully.", "data": userinfo}, status=status.HTTP_201_CREATED)
+                else:
+                    return Response({"exists": True, "message": "Participant already exists.", "data": userinfo}, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response({"exists": False, "error": True, "message": "Error adding participant.", "data": userinfo}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class UpdateParticipant(APIView):
+    """
+    Updates an R2Participants record by replacing the placeholder with a person.
+    """
+    authentication_classes = (authentication.BasicAuthentication,)
+    permission_classes = (permissions.AllowAny,)
+
+    def put(self, request, *args, **kwargs):
+        placeholderid = kwargs.get('placeholderid')
+        personid = kwargs.get('personid')
+
+        try:
+            # Fetch the placeholder object to validate existence
+            placeholder = get_object_or_404(UserPlaceholders, pk=placeholderid)
+            
+            # Fetch the person object to validate existence
+            person = get_object_or_404(E1People, pk=personid)
+
+            # Update the R2Participants record
+            participant = R2Participants.objects.filter(placeholder=placeholder).first()
+            if participant:
+                participant.person = person
+                #participant.placeholder = None  # Clear the placeholder field
+                participant.save()
+                return Response(
+                    {"message": "Participant record updated successfully."},
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(
+                    {"error": "No record found with the specified placeholder ID."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        except Exception as e:
+            return Response(
+                {"error": f"An error occurred: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class CheckEmail(APIView):
@@ -469,12 +633,16 @@ class CheckNames(APIView):
 
         if not surname and not firstname:
             return Response({"error": "Surname and first name are required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        exists = E1People.objects.filter(
+        
+        query = E1People.objects.filter(
+            #Q(othername__isnull=True)|Q(othername__iexact=othername),
             surname__iexact=surname,
             firstname__iexact=firstname,
-            othername__iexact=othername
-        ).exists()
+        ).filter(
+            Q(othername__iexact=othername) | Q(othername__isnull=True)
+        )
+
+        exists = query.exists()
 
         return Response({"exists": exists}, status=status.HTTP_200_OK)
     
