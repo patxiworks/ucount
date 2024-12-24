@@ -326,7 +326,7 @@ class R6ActivityAssign(models.Model):
     def __str__(self):
         return self.member.surname + ' ' + self.member.firstname
 
-'''
+
 class ActivitySummary(models.Model):
     summaryid = models.AutoField(db_column='SummaryID', primary_key=True)
     eventid = models.IntegerField(db_column='EventID', blank=True, null=True) # represents ActivitiesLogID
@@ -363,4 +363,4 @@ class ParticipantSummary(models.Model):
     class Meta:
         managed = False  # Created from a view. Don't remove.
         db_table = 'participant_summary'
-'''
+
